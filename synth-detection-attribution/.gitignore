@@ -1,0 +1,39 @@
+# --- Heavy / non-versioned artifacts (see docs/CHANGELOG_metodologico.md) ---
+# Raw and derived data never live in this repo. They live in the documented
+# Drive storage location. This section exists as a safety net, not as the
+# primary control (the primary control is: never point outputs at this repo).
+*.zip
+*.tar
+*.tar.gz
+data/
+datasets/
+crops/
+synth/
+runs/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Generated results that are NOT the canonical consolidated output ---
+# Canonical consolidated CSV/Parquet outputs are kept in results/ and ARE
+# versioned deliberately (they are small and are the evidentiary basis of the
+# paper's tables) -- everything else generated at run time is not.
+*.log
+tmp/
+scratch/
