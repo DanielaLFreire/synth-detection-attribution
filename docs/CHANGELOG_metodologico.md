@@ -37,3 +37,26 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   de pré-registro da Fase 0 (previsões falsificáveis, §9 do plano) terá
   data/hora conferíveis publicamente como evidência de que foi escrito antes
   dos resultados do Estágio A/B, reforçando o valor do pré-registro como tal.
+
+## 2026-08-31 — Auditoria de artefatos herdados no Drive (tarefa -1.9)
+
+- **Achado**: a verificação automatizada da estrutura do Drive (script de
+  checagem rodado no Colab) não encontrou nenhum artefato proibido dentro de
+  `EXPERIMENTO_ATRIBUICAO_CAUSAL/` — a barreira contra reaproveitamento de
+  crops/sintéticos com filtro inconsistente está intacta. Ver §12.1 do plano.
+- **Esclarecimento registrado**: dois arquivos em `Datasets/_zips` não
+  estavam documentados em nenhuma fonte já lida (`dataset_25k_v2.zip`,
+  `SeaShips_voc_incompleto_6509.zip`). Identificação de `dataset_25k_v2.zip`:
+  corresponde aos subconjuntos curado-por-similaridade-CLIP e
+  aleatório-de-controle (~25 mil imagens cada) do InaTechShips, usados no
+  artigo original (Freire, Teixeira & Moreira, 2026 — em revisão) nos braços
+  "A (curated)" e "B (random pool)" — pré-treino direto com imagens inteiras,
+  resultado de transferência negativa já estabelecido. **Decisão: fora do
+  escopo deste projeto** — categoricamente distinto da composição in-place
+  investigada aqui (imagens inteiras, não crops; pergunta de pesquisa
+  diferente, já respondida). Não é herdado nem regenerado; permanece apenas
+  como referência histórica em `Datasets/_zips`.
+- **Pendente**: identificação de `SeaShips_voc_incompleto_6509.zip` ainda não
+  confirmada — não usar até que a equipe esclareça se é uma versão parcial
+  do SeaShips (o nome sugere isso) que poderia ser confundida com o
+  `SeaShips_voc.zip` completo na extração de crops.
