@@ -60,3 +60,33 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   confirmada — não usar até que a equipe esclareça se é uma versão parcial
   do SeaShips (o nome sugere isso) que poderia ser confundida com o
   `SeaShips_voc.zip` completo na extração de crops.
+
+## 2026-08-31 — Resolução: origem do `SeaShips_voc_incompleto_6509.zip`
+
+- **Achado, via histórico de conversas do projeto anterior**: durante o
+  diagnóstico de uma discrepância no held-out zero-shot do SeaShips (a âncora
+  histórica de julho/2026 era 6.979 imagens), uma checagem de duplicatas
+  revelou que o `SeaShips_voc.zip` então em uso continha apenas 6.509
+  arquivos únicos. A hipótese de que o `seaship.zip` (Kaggle, 7.000 imagens)
+  fosse a fonte correta foi testada e descartada (0 anotações VOC nesse
+  zip — não poderia ter gerado o held-out anotado). A fonte correta era a
+  pasta `SeaShips_voc_completo/` no Drive, com 6.979 XMLs e 6.979 imagens
+  batendo com a âncora. Conclusão: `SeaShips_voc.zip` era um zipamento
+  parcial/interrompido (provável download incompleto via Roboflow).
+- **Correção já aplicada pelo projeto anterior**: o zip incompleto foi
+  renomeado para `SeaShips_voc_incompleto_6509.zip` (preservado por
+  auditabilidade, não apagado) e um `SeaShips_voc.zip` canônico (6.979
+  imagens, 0,63 GB) foi regenerado a partir da pasta completa do Drive.
+- **Decisão para este projeto**: `SeaShips_voc_incompleto_6509.zip` é
+  artefato obsoleto, mantido apenas como registro histórico de auditoria —
+  **nunca usar como fonte de extração de crops**. Antes de configurar a
+  extração do SeaShips (tarefa -1.6), confirmar que `SeaShips_voc.zip` (sem
+  o sufixo) ainda corresponde à versão canônica de 6.979 imagens — contagem
+  simples de arquivos, não assumir.
+- **Nota de método a reaproveitar na seção de métodos do artigo**: este é um
+  exemplo concreto do tipo de auditoria de proveniência que a Fase 0 deste
+  projeto (§9 do plano) formaliza como pré-requisito — a discrepância só foi
+  detectada porque uma contagem-âncora de referência (6.979) existia e foi
+  checada antes de prosseguir. É o mesmo princípio por trás do requisito de
+  manifesto com hash por artefato (§12.1): sem um número de referência
+  auditável, esse tipo de corrupção silenciosa de dado passa despercebido.
