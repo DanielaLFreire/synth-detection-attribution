@@ -467,3 +467,29 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   UA-DETRAC) contra os dados reais no Drive — nenhum foi executado além de
   testes sintéticos nesta sessão — e decidir `min_dim_px` (tarefa 0.2, com
   base na distribuição de tamanho real das quatro fontes).
+
+## 2026-09-01 — Início da Fase 0: perfilamento estrutural canônico (tarefa 0.1)
+
+- **Entregue**: `src/profiling/target_profile.py` — reimplementa do zero
+  (não porta o artefato antigo, porta o MÉTODO já validado) a classificação
+  COCO-style small/medium/large via letterbox: fator de escala único
+  `s = eval_size / max(W, H)` a partir das dimensões reais de cada imagem,
+  aplicado igualmente aos dois eixos — método correto confirmado em
+  2026-09-01 contra o método stretch (que causou a divergência 71,6% vs.
+  82,2% já diagnosticada e resolvida).
+- **Teste central** (`test_letterbox_e_stretch_divergem_para_imagem_nao_quadrada`):
+  reproduz numericamente, com uma caixa de 80×80 pixels originais numa
+  imagem 1920×1080, que os dois métodos produzem categorias DIFERENTES
+  para a mesma caixa (`small` por letterbox, `medium` por stretch) — prova
+  de que a divergência diagnosticada antes é reproduzível sob demanda, não
+  apenas uma leitura pontual de um relatório antigo. Teste de controle
+  confirma que os métodos coincidem quando a imagem é quadrada — isolando
+  a não-quadratura como a causa, não um bug genérico.
+- `scripts/perfilar_citra.py` roda o perfilamento sobre os três splits do
+  CITRA-3D-Real usando `labels_final/` (materializado e verificado em
+  -1.4), gera um perfil consolidado, e salva em JSON versionável.
+- Coberto por `tests/test_target_profile.py` (5 testes) — todos passando.
+  Suíte completa: 55/55.
+- **Ação pendente para você rodar no Colab**: executar
+  `scripts/perfilar_citra.py` para gerar o perfil real do CITRA-3D-Real —
+  ainda não fiz isso, não tenho acesso ao Drive.

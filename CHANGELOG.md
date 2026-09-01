@@ -101,3 +101,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   coded and tested; none of the four source-extraction scripts has been
   run against real Drive data yet — pending task 0.2's `min_dim_px`
   decision).
+- `src/profiling/target_profile.py`: canonical structural profiling (task
+  0.1, start of Phase 0). Reimplements from scratch (ports the validated
+  METHOD, not the legacy artifact) the letterbox-correct COCO-style
+  small/medium/large classification that resolves the previously diagnosed
+  71.6%-vs-82.2% discrepancy. `scripts/perfilar_citra.py` runs it against
+  CITRA-3D-Real's materialized `labels_final/`. Covered by
+  `tests/test_target_profile.py` (5 tests, including a numerical
+  reproduction of the letterbox-vs-stretch divergence on an 80×80px box in
+  a 1920×1080 image) — all passing. Full suite: 55/55 passing.
