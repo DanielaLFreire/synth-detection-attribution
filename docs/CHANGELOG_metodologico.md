@@ -307,3 +307,53 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   `epochs_total`, `epoca_checkpoint` e `warmup_steps_alvo` para os braços
   deste projeto — esses vêm da piloto da Fase 1, ainda não executada. O
   código está pronto para receber esses valores assim que existirem.
+
+## 2026-09-01 — Tarefa -1.6 (primeira fonte, SMD): estrutura verificada e extrator escrito
+
+- **Estrutura real do SMD verificada** (`smd_clean.zip`, 1.839 entradas):
+  914 imagens `.jpg` + 914 labels `.txt`, formato YOLO, classe única
+  (`nc: 1`, `names: ['vessel']`). Sem duplicação por augmentation Roboflow
+  (914 bases únicas = 914 imagens — diferente do SeaShips).
+- **Achado estrutural**: as 914 imagens estão **todas** dentro de
+  `smd_clean/test/` — `train/` e `val/` estão vazios. Números batem
+  exatamente com "SMD on-shore: 914 imagens, 7.043 boxes" já documentado no
+  perfil estrutural do projeto anterior — resquício, provavelmente, de uma
+  fase em que o SMD foi cogitado como candidato a held-out (papel
+  posteriormente atribuído ao SeaShips). **Decisão**: para este projeto, o
+  SMD é tratado como um pool único de 914 imagens (a divisão train/val/test
+  daquele zip é ignorada — não é papel do SMD neste desenho).
+- **Achado adicional, registrado para uso futuro**: as imagens do SMD são
+  frames de 36 vídeos distintos (~11–35 frames cada, identificáveis pelo
+  padrão de nome `MVI_<id>[_VIS|_NIR][_Haze]_frame<N>`). Frames do mesmo
+  vídeo são mais correlacionados entre si do que frames de vídeos
+  diferentes — uma forma de quase-duplicação por conteúdo, distinta da
+  duplicação por nome de arquivo do Roboflow, mas com efeito análogo sobre
+  a diversidade aparente do pool. O extrator (`extrair_crops_de_yolo`)
+  já captura `video_id` no manifesto de extração para permitir análise ou
+  amostragem por vídeo mais tarde, mesmo que a decisão de como tratar isso
+  (ex.: limitar N crops por vídeo) ainda não tenha sido tomada — decisão
+  deferida para quando o perfil das fontes (tarefa 0.2) mostrar se isso
+  afeta materialmente a diversidade medida do pool.
+- **Entregue**: `src/extraction/extrair_crops_yolo.py` — extrai um arquivo
+  de crop por bounding box a partir de anotação YOLO (recorte retangular
+  simples, não segmentação SAM — ver nota de escopo abaixo). Caixas
+  degeneradas ou labels órfãos são pulados e registrados no manifesto, sem
+  interromper o lote inteiro (decisão deliberadamente menos estrita que a
+  materialização de `labels_final/`, porque aqui lidamos com uma fonte de
+  crops, não com o dataset-alvo — uma caixa ruim isolada não compromete o
+  experimento). `scripts/extrair_smd.py` conecta extração + filtro
+  unificado (-1.3) + cópia para o Drive numa única execução. Coberto por
+  `tests/test_extrair_crops_yolo.py` (6 testes, incluindo reconhecimento de
+  `video_id` com os nomes de arquivo reais do SMD) — todos passando. Suíte
+  completa: 37/37.
+- **Escopo NÃO coberto nesta entrega**: modo de segmentação SAM (só recorte
+  retangular por enquanto — decisão de qualidade de borda a revisitar se
+  necessário); extração do SeaShips (precisa primeiro rodar a deduplicação
+  Roboflow já implementada em -1.3, ainda não conectada a um script de
+  ponta a ponta como o do SMD); extração do ABOShips (formato CSV ainda não
+  inspecionado nesta sessão).
+- **Aviso registrado**: `scripts/extrair_smd.py` usa `min_dim_px` como
+  parâmetro **obrigatório**, sem valor padrão sensato definido — o exemplo
+  na documentação do script (32px) é ilustrativo, não uma recomendação. O
+  valor real só deve ser decidido na tarefa 0.2, a partir da distribuição
+  de tamanho medida nas quatro fontes deste projeto.

@@ -46,3 +46,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Covered by `tests/test_protocol.py` (8 tests, including one that
   reproduces the original bug in miniature and one confirming the fix) —
   all passing. Full suite: 31/31 passing.
+- `src/extraction/extrair_crops_yolo.py`: bbox-based crop extraction from
+  YOLO annotation (task -1.6, first source: SMD). Captures `video_id` per
+  crop (SMD images are video frames — 36 distinct videos — a content-level
+  near-duplication axis distinct from but analogous to the Roboflow
+  augmentation issue found in SeaShips). Degenerate boxes / orphan labels
+  are skipped and logged, not fatal (deliberately less strict than target
+  dataset materialization). `scripts/extrair_smd.py` chains extraction +
+  unified quality filter (-1.3) + Drive copy. Covered by
+  `tests/test_extrair_crops_yolo.py` (6 tests, including real SMD filename
+  patterns) — all passing. Full suite: 37/37 passing.
