@@ -276,3 +276,34 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   `labels_final/` tem o manifesto de hash que permite detectar deriva).
   Rodar `scripts/verificar_labels_final.py` antes de cada fase que dependa
   destes dados (Fase 0 em diante) é recomendado, não apenas nesta ocasião.
+
+## 2026-09-01 — Tarefa -1.5: protocolo de treino V2 em código
+
+- **Bug corrigido**: `src/train/protocol.py` implementa warmup em passos de
+  gradiente **absolutos**, não em épocas. Documentado no projeto anterior:
+  a campanha original definiu warmup em épocas, o que produziu 252 steps de
+  warmup real no baseline B2 contra um número muito maior nos braços joint
+  (que têm o dobro de imagens por época, real+sintético) — mesma contagem
+  nominal de "épocas de warmup", quantidade real de aquecimento bem
+  diferente entre braços. `calcular_warmup_epochs_equivalente()` calcula,
+  para cada braço, a fração de época que resulta no mesmo número real de
+  passos, dado `warmup_steps_alvo` constante.
+- **Regra imposta em código, não só documentada**: `early_stopping_habilitado`
+  deve ser sempre `False` — o construtor de `ProtocoloTreinoV2` levanta
+  `ProtocoloInvalido` se receber `True`. Early stopping por métrica de
+  validação equivale a selecionar o checkpoint pelo desempenho no val, o
+  mesmo problema já discutido e resolvido para o Estágio A (ver entrada de
+  2026-09-01 sobre vazamento via split de validação) — agora fechado também
+  no protocolo de treino em si.
+- **`epoca_checkpoint` é obrigatório, sem valor padrão**: o construtor
+  recusa instanciar o protocolo sem esse valor — força a decisão consciente
+  de qual época usar como checkpoint fixo, a ser preenchida com evidência
+  de convergência da piloto (Fase 1), nunca copiada de outro projeto.
+- **Teste de contraste incluído deliberadamente**
+  (`test_bug_reproduzido_sem_a_correcao_para_contraste`): mostra o que
+  aconteceria SEM a correção — confirma que o bug documentado é real e
+  reproduzível, não uma leitura exagerada do changelog anterior.
+- **Escopo NÃO coberto nesta tarefa**: os valores numéricos reais de
+  `epochs_total`, `epoca_checkpoint` e `warmup_steps_alvo` para os braços
+  deste projeto — esses vêm da piloto da Fase 1, ainda não executada. O
+  código está pronto para receber esses valores assim que existirem.

@@ -35,3 +35,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   hash. Scripts de entrada: `scripts/materializar_labels_final.py`,
   `scripts/verificar_labels_final.py`. Covered by `tests/test_materialize.py`
   (7 tests) — all passing. Full suite: 23/23 passing.
+- `src/train/protocol.py`: V2 training protocol (task -1.5). Fixes the
+  documented warmup-in-epochs bug (a fixed warmup epoch count produces
+  different real gradient-step counts across arms with different
+  images-per-epoch, e.g. joint synthetic+real vs. baseline) by defining
+  warmup in absolute steps and computing the per-arm equivalent fractional
+  epoch count. Enforces full-schedule training (`early_stopping_habilitado`
+  must be False) and requires an explicit, non-default `epoca_checkpoint`
+  (must come from pilot convergence evidence, never copied or assumed).
+  Covered by `tests/test_protocol.py` (8 tests, including one that
+  reproduces the original bug in miniature and one confirming the fix) —
+  all passing. Full suite: 31/31 passing.
