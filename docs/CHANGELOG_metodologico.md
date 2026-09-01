@@ -147,3 +147,37 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   Objects in Context", ECCV), e registra esta divergência como nota
   metodológica no artigo — é evidência de auditoria de rigor, não uma falha
   a esconder.
+
+## 2026-08-31 — Causa raiz da divergência de perfil estrutural, identificada e confirmada
+
+- **Origem do `escala_citra3d_report.json` localizada**: script
+  `analisar_escala_citra3d.py` (394 linhas), de uma fase anterior ao
+  `maritime-crossdomain` — o script que originou a própria ideia de
+  composição in-place ("Scale-Aware Copy-Paste com SAM"). Saída de console
+  registrada no histórico bate exatamente com o JSON (71,6% small).
+- **Causa raiz identificada**: `analisar_escala_citra3d.py` converte largura
+  e altura normalizadas do YOLO para pixels multiplicando cada uma por 640
+  **independentemente** — equivalente a assumir implicitamente que a imagem
+  original é quadrada (um *stretch* para 640×640). O Passo Zero oficial do
+  `maritime-crossdomain` (`src/crossdomain/profiling.py`), usado na Tabela I
+  do artigo, calcula um único fator de escala `s = 640 / max(W, H)` a partir
+  das dimensões reais da imagem e aplica esse fator aos dois eixos — o
+  redimensionamento com preservação de proporção ("letterbox") que o YOLO
+  de fato usa no pré-processamento de treino.
+- **Confirmação empírica**: as imagens do CITRA-3D-Real **não são
+  quadradas** — amostra de 50 imagens do split de treino mostrou
+  1920×1061 (42 imagens) e 1920×1080 (8 imagens), aspecto ~1,81:1
+  (verificado via PIL em 2026-09-01). Isso confirma que o método de
+  `analisar_escala_citra3d.py` distorce a conversão de forma diferente em
+  cada eixo, alterando artificialmente quantos objetos caem abaixo do
+  limiar de 32×32 px — exatamente a divergência observada (71,6% vs 82,2%),
+  sem afetar a área normalizada (adimensional, não depende dessa conversão,
+  por isso bateu igual nos dois: ~0,099%).
+- **Decisão fechada**: o número correto é **82,2% small (método letterbox)**,
+  porque reflete o pré-processamento real de treino — e é o único dos dois
+  métodos que preserva comparabilidade justa entre datasets de proporções
+  nativas diferentes (o stretch introduz uma distorção cujo tamanho varia
+  dataset a dataset, conforme a proporção nativa de cada um, o que
+  prejudica em vez de ajudar a comparação). O script canônico de
+  perfilamento da tarefa 0.1 implementa exclusivamente o método letterbox,
+  citando Lin et al. (2014) para a definição do limiar de tamanho.
