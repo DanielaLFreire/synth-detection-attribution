@@ -10,6 +10,7 @@ from .extrair_crops_yolo import (
     identificar_video_id,
     LinhaExtracaoYolo,
 )
+from .extrair_crops_voc import extrair_crops_de_voc, LinhaExtracaoVoc
 
 __all__ = [
     "deduplicar_por_base",
@@ -23,4 +24,6 @@ __all__ = [
     "extrair_crops_de_yolo",
     "identificar_video_id",
     "LinhaExtracaoYolo",
+    "extrair_crops_de_voc",
+    "LinhaExtracaoVoc",
 ]

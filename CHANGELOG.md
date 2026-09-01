@@ -56,3 +56,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   unified quality filter (-1.3) + Drive copy. Covered by
   `tests/test_extrair_crops_yolo.py` (6 tests, including real SMD filename
   patterns) — all passing. Full suite: 37/37 passing.
+- `src/extraction/extrair_crops_voc.py`: bbox-based crop extraction from
+  VOC XML annotation (task -1.6, second source: SeaShips). Absolute-pixel
+  boxes (no normalization); captures original source subclass per object
+  for dataset-description purposes (not used for filtering, since this
+  project treats SeaShips purely as a visual-appearance source for the
+  target's single class); flags (does not abort on) XML/image dimension
+  mismatches. `scripts/extrair_seaships.py` chains: zip extraction →
+  Roboflow-augmentation dedup (-1.3) → VOC crop extraction → unified filter
+  → Drive copy — dedup runs before extraction to avoid processing
+  near-identical augmented copies. Covered by `tests/test_extrair_crops_voc.py`
+  (4 tests) — all passing. Full suite: 41/41 passing.

@@ -357,3 +357,34 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   na documentação do script (32px) é ilustrativo, não uma recomendação. O
   valor real só deve ser decidido na tarefa 0.2, a partir da distribuição
   de tamanho medida nas quatro fontes deste projeto.
+
+## 2026-09-01 — Tarefa -1.6 (segunda fonte, SeaShips): extrator VOC e script de ponta a ponta
+
+- **Entregue**: `src/extraction/extrair_crops_voc.py` — extrai um crop por
+  `<object>` de cada anotação VOC XML. Diferente do extrator YOLO (SMD): a
+  caixa já vem em pixels absolutos, sem conversão por dimensão de imagem.
+  Cada objeto pode ter uma subclasse original do SeaShips (dataset original
+  tem 6 tipos de embarcação) — capturada no manifesto como
+  `classe_original_fonte`, mas **não usada para filtrar**, já que este
+  projeto usa o SeaShips apenas como fonte de aparência visual para a
+  classe única do dataset-alvo.
+- **Checagem de auditoria incluída de graça**: comparação entre as
+  dimensões declaradas no `<size>` do XML e o tamanho real do arquivo de
+  imagem, registrada por linha (`dimensoes_xml_conferem_com_imagem`) —
+  sinaliza, sem abortar, uma possível fonte de inconsistência (imagem
+  redimensionada depois da anotação).
+- **`scripts/extrair_seaships.py`** conecta as três etapas: (1) extrai o
+  zip localmente, (2) aplica a deduplicação Roboflow já implementada em
+  -1.3 sobre as imagens brutas (13.105 → ~6.979 esperado, achado de
+  2026-08-31), movendo cada imagem única + seu XML correspondente para uma
+  pasta separada antes de prosseguir, (3) extrai crops via VOC apenas
+  sobre o conjunto já deduplicado, (4) aplica o filtro unificado, (5) copia
+  para o Drive. A ordem importa: deduplicar ANTES de extrair evita gastar
+  processamento em crops que seriam quase-idênticos entre si por
+  augmentation.
+- Coberto por `tests/test_extrair_crops_voc.py` (4 testes: extração básica,
+  preservação de classe original, divergência de dimensões XML×imagem,
+  caixa degenerada) — todos passando. Suíte completa: 41/41.
+- **Escopo NÃO coberto ainda**: execução real contra o `SeaShips_voc.zip`
+  do Drive (script pronto, mas não rodado nesta sessão); extração do
+  ABOShips (formato CSV, ainda não inspecionado).
