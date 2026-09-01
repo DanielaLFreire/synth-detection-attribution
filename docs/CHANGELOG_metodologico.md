@@ -256,3 +256,23 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   `InconsistenciaDeDataset` — se levantar, é sinal de que algo mudou no
   Drive desde a nossa verificação de 2026-08-31/09-01, e deve ser
   investigado antes de prosseguir para a Fase 0.
+
+## 2026-09-01 — Tarefa -1.4 executada com sucesso no Drive real
+
+- **Resultado**: `labels_final/` materializado nos três splits do
+  CITRA-3D-Real, com manifesto de hash gerado em cada um. Nenhuma
+  `InconsistenciaDeDataset` foi levantada.
+- **Contagens** (train / val / test): 1.348 / 332 / 401 imagens;
+  4.489 / 1.267 / 1.247 boxes; **7.003 boxes no total** — bate exatamente
+  com `n_bboxes_total` do `escala_citra3d_report.json` investigado
+  anteriormente, confirmando de forma independente (validação por código
+  distinto do que gerou aquele relatório) que os três splits têm
+  exclusivamente classe `0`, sem imagem ou label órfão.
+- **Estado**: `labels_final/` e `labels_final_manifest.json` (um por split)
+  agora existem em `CITRA-3D-Real/{split}/` no Drive. Este é o artefato
+  **oficial e congelado** a partir de agora — qualquer script deste projeto
+  que precisar de labels do dataset-alvo deve ler de `labels_final/`, não
+  de `labels_single_class/` diretamente (ainda que hoje sejam idênticos, só
+  `labels_final/` tem o manifesto de hash que permite detectar deriva).
+  Rodar `scripts/verificar_labels_final.py` antes de cada fase que dependa
+  destes dados (Fase 0 em diante) é recomendado, não apenas nesta ocasião.
