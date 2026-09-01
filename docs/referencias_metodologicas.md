@@ -50,6 +50,15 @@ nova decisão for justificada por literatura.
   Uso neste projeto: citação obrigatória da fonte pública InaTechShips,
   usada como uma das quatro fontes de crops (§4 do plano).
 
+- **Lin, T.-Y. et al. (2014).** "Microsoft COCO: Common Objects in Context."
+  *ECCV 2014*.
+  Uso neste projeto: definição de referência para os limiares de tamanho de
+  objeto (small < 32² px, medium < 96² px, large ≥ 96² px), adotada no script
+  canônico de perfilamento estrutural (tarefa 0.1) para resolver, de forma
+  documentada, uma divergência encontrada entre duas medições legadas do
+  mesmo indicador no CITRA-3D-Real (ver `CHANGELOG_metodologico.md`,
+  entrada de 2026-08-31).
+
 ### Linhagem intelectual do projeto (não é este projeto, mas é o trabalho do qual ele herda perguntas e lições)
 
 - **Freire, D.L., Teixeira, E.H., Moreira, L.A.S. (2026).** "Visual

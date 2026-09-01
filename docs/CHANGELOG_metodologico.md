@@ -90,3 +90,60 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   checada antes de prosseguir. É o mesmo princípio por trás do requisito de
   manifesto com hash por artefato (§12.1): sem um número de referência
   auditável, esse tipo de corrupção silenciosa de dado passa despercebido.
+
+## 2026-08-31 — `SeaShips_voc.zip` contém duplicatas por augmentation (Roboflow)
+
+- **Achado**: verificação direta do zip mostrou 13.105 imagens totais, mas
+  apenas **6.979 bases únicas** (batendo com o canônico já estabelecido) —
+  **6.126 bases têm mais de uma cópia**, confirmando que a exportação via
+  Roboflow aplicou aumento de dados (flip/rotação/brilho) sobre a maior parte
+  do conjunto de treino, preservando o nome-base e variando o hash de sufixo.
+- **Por que isso importa**: usar as cópias aumentadas como fonte de crops
+  inflaria artificialmente a diversidade aparente do pool (a feature
+  `novidade_pool`, §6 do plano, mediria pares quase-duplicados como se fossem
+  amostras independentes) — um viés diferente do zip incompleto anterior,
+  mas igualmente prejudicial à validade do Estágio A.
+- **Decisão**: a extração de crops do SeaShips (tarefa -1.3/-1.6) deve
+  deduplicar por base antes de segmentar — manter exatamente uma cópia por
+  base (critério: primeira por ordem alfabética do sufixo de hash, para ser
+  determinística e documentável no manifesto de extração). Implementar esse
+  filtro como parte do componente de filtro unificado (§8.1 do plano), não
+  como um passo ad-hoc separado.
+
+## 2026-08-31 — Inspeção da estrutura do CITRA-3D-Real (tarefa -1.2, preparação)
+
+- **Achado positivo**: `labels_single_class/` está confirmado **limpo (só
+  classe `0`)** nos três splits (train 1.348, val 332, test 401), diretamente
+  no disco — não depende de conversão em runtime como o projeto anterior
+  chegou a documentar em uma versão anterior deste dataset.
+- **Explicação da limpeza**: uma pasta `_quarantine/` (log
+  `quarantine_log.json`, datado de 2026-04-10) documenta a remoção cirúrgica
+  de duas imagens com anotação corrompida (`Quadrado_marcacao(Clone)`,
+  incluindo uma bounding box degenerada com largura/altura zero) — uma do
+  train (`29.04.2022-14-59-27`), uma do test (`14.04.2022-13-48-55`). Ambas
+  as imagens (não só a linha inválida) foram movidas para quarentena, com
+  registro completo de origem/destino de cada arquivo. Os totais atuais
+  (1.348/332/401) já refletem essa remoção. Boa prática a citar no artigo
+  como exemplo de auditoria de proveniência de dado.
+- **Taxonomia original documentada** (`data.yaml.original`, 9 classes):
+  Militar, Barca, Mercante, Vela, Passageiro, TUG, Lancha, Miúda, Navio —
+  colapsadas para a classe única `embarcacao` em `data_single_class.yaml`.
+  Útil para a seção de descrição de dataset do artigo.
+- **Divergência encontrada entre perfis estruturais legados — NÃO
+  reconciliada**: `escala_citra3d_report.json` (gerado 2026-04-23, script de
+  origem não localizado) reporta 71,6% de objetos "small" (COCO@640); a
+  tabela oficial do Passo Zero do projeto anterior (26/06/2026, via
+  `src/crossdomain/profiling.py`) reporta 82,2% para o mesmo dataset. A área
+  mediana bate entre os dois (~0,099%), mas o %small diverge — consistente
+  com os dois scripts aplicarem correção de letterbox (proporção original da
+  imagem) de formas diferentes ao converter bbox normalizada para pixels
+  absolutos em 640×640.
+- **Decisão**: nenhum dos perfis estruturais legados (`escala_citra3d_report.json`,
+  tabela do Passo Zero do `maritime-crossdomain`, `07_profile_heldout_sizes.py`)
+  é reaproveitado diretamente. A tarefa **0.1** deste projeto escreve um
+  script de perfilamento canônico único, com o método de conversão para
+  pixels absolutos documentado explicitamente (citando a definição original
+  de "small object" de Lin, T.-Y. et al., 2014, "Microsoft COCO: Common
+  Objects in Context", ECCV), e registra esta divergência como nota
+  metodológica no artigo — é evidência de auditoria de rigor, não uma falha
+  a esconder.
