@@ -15,3 +15,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   scene-memorization confound, plan §5.2); explicit override required and
   logged. Covered by `tests/test_compose.py` (manifest row count, determinism
   under fixed seed, train-split guard) — all passing.
+- `src/extraction/`: unified crop quality filter (task -1.3, partial —
+  see docs/CHANGELOG_metodologico.md for exact scope). Roboflow-augmentation
+  deduplication (`dedup_roboflow.py`), source-agnostic quality filter with
+  configurable thresholds (`quality_filter.py` — no hardcoded threshold
+  values, deliberately, to avoid repeating the ABOShips-vs-InaTechShips
+  filter-inconsistency confound documented from the prior project), and a
+  hashed extraction manifest (`quality_manifest.py`) producing the exact
+  `pool_crops` format expected by `src.compose.compor_dataset`. Covered by
+  `tests/test_extraction.py` (12 tests) — all passing. NOT yet implemented:
+  per-source native annotation readers (ABOShips CSV, SMD format) — deferred
+  to task -1.6, pending direct inspection of those sources' real structure.

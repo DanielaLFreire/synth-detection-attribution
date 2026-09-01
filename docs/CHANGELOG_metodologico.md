@@ -205,3 +205,29 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   papel do split de validação (seleção de modelo) e do split de teste
   (estimativa de erro de generalização), e por que só o segundo precisa
   ficar intocado até a Fase 4.
+
+## 2026-09-01 — Tarefa -1.3, entrega parcial: filtro de crop unificado
+
+- **Escopo entregue**: (1) deduplicação de imagens aumentadas por exportação
+  Roboflow (`src/extraction/dedup_roboflow.py`) — implementa a correção
+  decidida em 2026-08-31 para o `SeaShips_voc.zip`; (2) filtro de qualidade
+  de crop unificado (`src/extraction/quality_filter.py`), com limiares de
+  dimensão mínima e cobertura de máscara **configuráveis, não fixos**; (3)
+  manifesto de extração com hash SHA-256 por crop mantido
+  (`src/extraction/quality_manifest.py`), produzindo diretamente o formato
+  `pool_crops` consumido por `src.compose.compor_dataset` (integração entre
+  as tarefas -1.2 e -1.3 confirmada por teste).
+- **Decisão deliberada de não fixar o limiar de dimensão mínima agora**: o
+  projeto anterior usou 20px, calibrado especificamente para o ABOShips
+  (66,3% de suas caixas têm lado menor que 50px). Copiar esse número para
+  as quatro fontes deste projeto sem re-verificação repetiria o tipo de
+  decisão que causou o confound documentado entre ABOShips e InaTechShips.
+  `FiltroConfig.min_dim_px` é parâmetro obrigatório sem valor padrão — o
+  valor correto será derivado na tarefa **0.2** (perfis das fontes), a
+  partir da distribuição de tamanho real das quatro fontes deste projeto.
+- **Escopo NÃO entregue nesta tarefa** (deferido para a -1.6): leitura da
+  anotação nativa de cada fonte (CSV do ABOShips, formato do SMD) para
+  realizar a extração propriamente dita dos crops a partir das imagens
+  brutas — só verificamos com certeza o formato do CITRA (YOLO) e do
+  SeaShips (VOC XML) até agora. Este módulo opera sobre crops **já
+  extraídos** (arquivos de imagem individuais); não lê anotação de origem.
