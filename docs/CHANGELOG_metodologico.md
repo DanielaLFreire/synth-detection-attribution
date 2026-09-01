@@ -424,3 +424,46 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   SeaShips, ABOShips)** — falta apenas rodar os três scripts contra os
   dados reais no Drive (nenhum foi executado além do teste sintético nesta
   sessão) e decidir `min_dim_px` na tarefa 0.2.
+
+## 2026-09-01 — Tarefa -1.8: UA-DETRAC verificado e preparado como segundo domínio
+
+- **Decisão sobre proveniência**: diante de múltiplos espelhos comunitários
+  incompatíveis do UA-DETRAC no Roboflow Universe (sem uma versão oficial
+  de acesso imediato), aplicamos o MESMO padrão de rigor já usado para
+  SMD/SeaShips/ABOShips — não uma exigência nova: escolhida uma versão
+  específica e documentada (`UA-DETRAC-DATASET-10K` por `rjacaac1`,
+  Roboflow Universe, versão 2, ~9.816 imagens, 4 classes), com URL e autor
+  registrados para citação, em vez de qualquer espelho não identificado.
+- **Estrutura real verificada**: 9.816 imagens/labels em `train/` (9.316) e
+  `valid/` (500); `test/` vazio (sem problema — o papel do UA-DETRAC neste
+  projeto, Fase 2.5, usa apenas inferência com detector já treinado
+  (COCO), não requer split de teste próprio). Formato YOLO (reaproveita o
+  extrator já escrito para o SMD, nenhum extrator novo necessário). 4
+  classes originais (`bus`, `car`, `truck`, `van`, `data.yaml` verificado)
+  — precisam de colapso para classe única `vehicle`, mesmo tratamento já
+  dado às 9 classes do CITRA-3D-Real.
+- **Duplicação por augmentation Roboflow confirmada, escala pequena**: 100
+  de 9.816 imagens do train têm mais de uma cópia — mesmo mecanismo do
+  SeaShips (13.105→6.979), proporção bem menor aqui. Deduplicado pelo
+  mesmo módulo (`dedup_roboflow.py`) por consistência de método, não por
+  o impacto ser grande neste caso.
+- **Entregue**: `src/materialize/collapse_classes.py` — transforma label
+  multi-classe em classe única (diferente de `materializar_labels_final`,
+  que só valida, não converte), com detecção de classe fora do conjunto
+  declarado (`ClasseOriginalInesperada`). `scripts/preparar_ua_detrac.py`
+  encadeia: extração do zip → colapso de classes (train e valid) →
+  deduplicação Roboflow (train) → materialização de `labels_final/` do
+  split **valid** (fundo de composição da Fase 2.5, seguindo a mesma regra
+  §5.2 de nunca usar o split usado para ajuste do detector) → extração do
+  pool de crops de veículo a partir do split **train** deduplicado →
+  filtro unificado → cópia para o Drive. Nenhum extrator novo foi
+  necessário — reaproveita `extrair_crops_de_yolo` (SMD) e
+  `filtrar_pool_de_crops`/`materializar_labels_final` já existentes.
+  Coberto por `tests/test_collapse_classes.py` (3 testes) — todos
+  passando. Suíte completa: 50/50.
+- **Fase -1 concluída** com esta entrega: todas as nove tarefas (-1.1 a
+  -1.9) têm código escrito e testado. Pendências reais remanescentes antes
+  da Fase 0: rodar os quatro scripts de extração (SMD, SeaShips, ABOShips,
+  UA-DETRAC) contra os dados reais no Drive — nenhum foi executado além de
+  testes sintéticos nesta sessão — e decidir `min_dim_px` (tarefa 0.2, com
+  base na distribuição de tamanho real das quatro fontes).

@@ -84,3 +84,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (6 tests) — all passing. Full suite: 47/47 passing. This completes task
   -1.6's code for all three public crop sources (SMD, SeaShips, ABOShips);
   none of the three extraction scripts has been run against real data yet.
+- `src/materialize/collapse_classes.py`: multi-class-to-single-class label
+  collapse (task -1.8, UA-DETRAC — 4 original classes: bus/car/truck/van).
+  Distinct from `materializar_labels_final` (which only validates a single
+  class, doesn't convert). Detects unexpected class ids
+  (`ClasseOriginalInesperada`). `scripts/preparar_ua_detrac.py` chains:
+  zip extraction → class collapse (train + valid) → Roboflow dedup (train,
+  100/9,816 duplicates found) → `labels_final/` materialization of the
+  valid split (composition background, per the same §5.2 rule of never
+  using the split used for detector fitting) → vehicle crop pool
+  extraction from the deduplicated train split → unified filter → Drive
+  copy. No new extractor needed — reuses `extrair_crops_de_yolo` and the
+  existing filter/materialization modules. Covered by
+  `tests/test_collapse_classes.py` (3 tests) — all passing. Full suite:
+  50/50 passing. **This completes Phase -1** (tasks -1.1 through -1.9, all
+  coded and tested; none of the four source-extraction scripts has been
+  run against real Drive data yet — pending task 0.2's `min_dim_px`
+  decision).

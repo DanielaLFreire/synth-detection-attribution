@@ -6,6 +6,11 @@ from .labels_final import (
     RelatorioVerificacao,
     MANIFEST_LABELS_FINAL_VERSION,
 )
+from .collapse_classes import (
+    colapsar_para_classe_unica,
+    ClasseOriginalInesperada,
+    RelatorioColapso,
+)
 
 __all__ = [
     "materializar_labels_final",
@@ -14,4 +19,7 @@ __all__ = [
     "RelatorioMaterializacao",
     "RelatorioVerificacao",
     "MANIFEST_LABELS_FINAL_VERSION",
+    "colapsar_para_classe_unica",
+    "ClasseOriginalInesperada",
+    "RelatorioColapso",
 ]
