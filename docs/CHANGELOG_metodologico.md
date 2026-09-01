@@ -231,3 +231,28 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   brutas — só verificamos com certeza o formato do CITRA (YOLO) e do
   SeaShips (VOC XML) até agora. Este módulo opera sobre crops **já
   extraídos** (arquivos de imagem individuais); não lê anotação de origem.
+
+## 2026-09-01 — Tarefa -1.4: materialização de `labels_final/` com hash
+
+- **Entregue**: `src/materialize/labels_final.py` — valida integridade
+  (correspondência 1:1 imagem↔label, todas as linhas com classe permitida)
+  antes de copiar `labels_single_class/` para `labels_final/` em cada split,
+  gravando um manifesto (`labels_final_manifest.json`) com hash SHA-256 por
+  arquivo e contagem de boxes. Função separada de verificação
+  (`verificar_labels_final`) recalcula hashes a qualquer momento futuro e
+  reporta deriva (arquivo alterado, faltando, ou novo não registrado).
+- **Teste deliberado**: um dos testes reproduz em miniatura a exata
+  contaminação real já encontrada no CITRA-3D-Real
+  (`Quadrado_marcacao(Clone)`) e confirma que a materialização a detecta e
+  aborta sozinha — não dependemos mais de uma quarentena manual feita à
+  parte para garantir isso; o script recusaria materializar um dado
+  contaminado como esse, caso reaparecesse.
+- **Ação pendente para você rodar no Colab** (não fiz isso — não tenho
+  acesso ao Drive real): executar
+  `scripts/materializar_labels_final.py` apontando para
+  `CITRA-3D-Real`, com `labels_subfolder_origem=labels_single_class` e
+  `splits=[train, val, test]`. Como já confirmamos que os três splits estão
+  limpos, a expectativa é que a materialização complete sem levantar
+  `InconsistenciaDeDataset` — se levantar, é sinal de que algo mudou no
+  Drive desde a nossa verificação de 2026-08-31/09-01, e deve ser
+  investigado antes de prosseguir para a Fase 0.

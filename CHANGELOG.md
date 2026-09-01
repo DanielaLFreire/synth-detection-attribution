@@ -26,3 +26,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `tests/test_extraction.py` (12 tests) — all passing. NOT yet implemented:
   per-source native annotation readers (ABOShips CSV, SMD format) — deferred
   to task -1.6, pending direct inspection of those sources' real structure.
+- `src/materialize/`: materialização de `labels_final/` com validação de
+  integridade e manifesto de hash SHA-256 (task -1.4). Detecta e recusa
+  materializar sobre imagem-sem-label, label-sem-imagem, ou linha com classe
+  fora do conjunto permitido (reproduz em teste o exato tipo de contaminação
+  já encontrado no CITRA-3D-Real — `Quadrado_marcacao(Clone)`). Inclui
+  `verificar_labels_final()` para detectar deriva futura via recomputação de
+  hash. Scripts de entrada: `scripts/materializar_labels_final.py`,
+  `scripts/verificar_labels_final.py`. Covered by `tests/test_materialize.py`
+  (7 tests) — all passing. Full suite: 23/23 passing.
