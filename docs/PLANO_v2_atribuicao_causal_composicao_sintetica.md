@@ -191,6 +191,22 @@ atualização de peso por *backprop* durante o treino (só entram no cálculo da
 métrica de parada), portanto o viés de memorização de pixel é muito menor ali.
 Essa escolha é registrada explicitamente no pré-registro.
 
+**Nota sobre um viés residual considerado e descartado**: usar o split de val
+para gerar as colagens de sondagem não compromete a separação
+observação→confirmação do desenho (§5), porque a métrica de decisão causal do
+Estágio B é lida no split de **teste** — nunca tocado pelo Estágio A. A única
+forma de contaminação que precisaria de atenção seria indireta: se o
+checkpoint usado para gerar o alvo binário do Estágio A fosse escolhido *por
+desempenho no val* (early stopping clássico), esse checkpoint estaria, em
+grau pequeno, favorecido para ir bem justamente nesses fundos — um viés
+uniforme sobre a taxa de acerto, não diferencial entre features, mas evitável.
+**Esse viés não se aplica aqui**: o protocolo de treino V2 (§3) já especifica
+que o checkpoint é selecionado por **época pré-registrada fixa**, nunca por
+métrica de validação — logo, nenhuma seleção informada pelo val ocorre em
+nenhum ponto da cadeia. A decisão de época fixa foi tomada por outro motivo
+(instabilidade de seleção por val em conjuntos pequenos) mas fecha, como
+efeito colateral, esta lacuna também.
+
 ### 5.3 Manifesto de composição — especificação de engenharia
 
 O componente de composição sintética deste projeto (escrito do zero neste

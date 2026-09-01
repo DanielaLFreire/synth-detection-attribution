@@ -29,6 +29,17 @@ nova decisão for justificada por literatura.
 
 ### Interpretabilidade e atribuição causal (a preencher conforme o Estágio A/B avançar)
 
+- **Hastie, T., Tibshirani, R., Friedman, J. (2009).** *The Elements of
+  Statistical Learning: Data Mining, Inference, and Prediction* (2ª ed.).
+  Springer. Capítulo 7, "Model Assessment and Selection".
+  Uso neste projeto: fundamenta a distinção entre o papel do split de
+  validação (seleção de modelo/checkpoint) e do split de teste (estimativa de
+  erro de generalização) — usada para justificar por que gerar as colagens de
+  sondagem do Estágio A sobre o split de validação (§5.2 do plano) não
+  compromete a separação causal observação→confirmação, desde que a seleção
+  de checkpoint não dependa do desempenho nesse mesmo split (ver
+  `CHANGELOG_metodologico.md`, entrada de 2026-09-01).
+
 - *(pendente)* Referência sobre SHAP e o cuidado com features correlacionadas
   — a citar quando implementarmos §5.5 do plano (tratamento de
   multicolinearidade).
@@ -58,6 +69,22 @@ nova decisão for justificada por literatura.
   documentada, uma divergência encontrada entre duas medições legadas do
   mesmo indicador no CITRA-3D-Real (ver `CHANGELOG_metodologico.md`,
   entrada de 2026-08-31).
+
+### Composição sintética (copy-paste)
+
+- **Dwibedi, D., Misra, I., Hebert, M. (2017).** "Cut, Paste and Learn:
+  Surprisingly Easy Synthesis for Instance Detection." *ICCV 2017*, 1310–1319.
+  Uso neste projeto: referência fundacional da técnica de composição
+  recorte-e-colagem para detecção de instância — base conceitual do
+  componente `src/compose/` (tarefa -1.2).
+
+- **Ghiasi, G., Cui, Y., Srinivas, A., Qian, R., Lin, T.-Y., Cubuk, E.D.,
+  Le, Q.V., Zoph, B. (2021).** "Simple Copy-Paste is a Strong Data
+  Augmentation Method for Instance Segmentation." *CVPR 2021*, 2918–2928.
+  Uso neste projeto: demonstra que colagem posicionada sem modelagem de
+  contexto ao redor já produz ganho robusto — justifica a escolha de não
+  exigir realismo de contexto na composição in-place deste projeto,
+  consistente com a decisão de herdar posições de caixas reais (§5.1).
 
 ### Linhagem intelectual do projeto (não é este projeto, mas é o trabalho do qual ele herda perguntas e lições)
 

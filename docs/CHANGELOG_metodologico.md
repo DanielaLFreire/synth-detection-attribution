@@ -181,3 +181,27 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   prejudica em vez de ajudar a comparação). O script canônico de
   perfilamento da tarefa 0.1 implementa exclusivamente o método letterbox,
   citando Lin et al. (2014) para a definição do limiar de tamanho.
+
+## 2026-09-01 — Uso do split de validação nas colagens de sondagem: vazamento?
+
+- **Questão levantada**: usar o split de validação para gerar as colagens de
+  sondagem do Estágio A (§5.2) conta como "usar" um split reservado, e por
+  isso poderia comprometer alguma medição futura?
+- **Resposta**: não compromete a separação causal observação→confirmação,
+  porque a métrica de decisão do Estágio B é lida no split de **teste**
+  (nunca tocado pelo Estágio A). A forma de contaminação que precisaria de
+  atenção seria indireta — se o checkpoint usado para rotular acerto/erro no
+  Estágio A fosse escolhido por desempenho no val (early stopping clássico),
+  ele estaria levemente favorecido para ir bem nesses fundos especificamente.
+- **Resolvido por construção**: o protocolo V2 (§3 do plano) já especifica
+  seleção de checkpoint por **época pré-registrada fixa**, nunca por métrica
+  de validação — decisão tomada por outro motivo (instabilidade de seleção
+  por val em conjuntos pequenos), mas que elimina também esta lacuna como
+  efeito colateral. Nenhuma mudança de protocolo foi necessária; só a
+  conexão explícita entre as duas decisões foi registrada no plano (§5.2).
+- **Referência conceitual usada no raciocínio**: Hastie, T., Tibshirani, R.,
+  Friedman, J. (2009). *The Elements of Statistical Learning* (2ª ed.),
+  Cap. 7 "Model Assessment and Selection" — fundamenta a distinção entre o
+  papel do split de validação (seleção de modelo) e do split de teste
+  (estimativa de erro de generalização), e por que só o segundo precisa
+  ficar intocado até a Fase 4.
