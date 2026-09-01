@@ -493,3 +493,24 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
 - **Ação pendente para você rodar no Colab**: executar
   `scripts/perfilar_citra.py` para gerar o perfil real do CITRA-3D-Real —
   ainda não fiz isso, não tenho acesso ao Drive.
+
+## 2026-09-01 — Tarefa 0.1 executada: perfil canônico do CITRA-3D-Real gerado
+
+- **Resultado real** (via `scripts/perfilar_citra.py`, `labels_final/`):
+  train 4.489 boxes (81,8% small), val 1.267 boxes (85,7% small), test
+  1.247 boxes (79,9% small). Consolidado: **7.003 boxes, 2.081 imagens**,
+  small ponderado = (3.674+1.086+996)/7.003 = **82,2%**.
+- **Convergência independente confirmada**: os 7.003 boxes / 2.081 imagens
+  batem com a materialização de `labels_final/` (tarefa -1.4, três fontes
+  de código diferentes agora concordam: materialização, perfil legado do
+  Passo Zero, perfil novo). O percentual consolidado de 82,2% small bate,
+  até a primeira casa decimal, com o valor do Passo Zero oficial do
+  projeto anterior (calculado por um código diferente do implementado
+  aqui) — evidência de que a reimplementação do método letterbox está
+  correta, não apenas plausível. Resultado salvo em
+  `pre_registro/perfil_citra_3d_real.json` no Drive.
+- **Perfil do alvo (Família 4 de features, §6 do plano) agora
+  disponível e reproduzível**: percentis completos de largura/altura/área
+  normalizada, aspect ratio, posição, e objetos por imagem, por split e
+  consolidado — pronto para servir de referência às features relacionais
+  do Estágio A quando chegarmos lá.
