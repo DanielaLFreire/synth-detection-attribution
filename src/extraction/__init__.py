@@ -11,6 +11,11 @@ from .extrair_crops_yolo import (
     LinhaExtracaoYolo,
 )
 from .extrair_crops_voc import extrair_crops_de_voc, LinhaExtracaoVoc
+from .extrair_crops_csv_abo import (
+    extrair_crops_de_csv_abo,
+    LinhaExtracaoCsvAbo,
+    NomeBaseAmbiguo,
+)
 
 __all__ = [
     "deduplicar_por_base",
@@ -26,4 +31,7 @@ __all__ = [
     "LinhaExtracaoYolo",
     "extrair_crops_de_voc",
     "LinhaExtracaoVoc",
+    "extrair_crops_de_csv_abo",
+    "LinhaExtracaoCsvAbo",
+    "NomeBaseAmbiguo",
 ]

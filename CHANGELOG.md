@@ -67,3 +67,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   → Drive copy — dedup runs before extraction to avoid processing
   near-identical augmented copies. Covered by `tests/test_extrair_crops_voc.py`
   (4 tests) — all passing. Full suite: 41/41 passing.
+- `src/extraction/extrair_crops_csv_abo.py`: crop extraction from
+  ABOShips' CSV annotation (task -1.6, third source). Indexes all 9,880
+  images by base filename across 16 date subfolders before processing the
+  CSV (CSV references filenames without subfolder or extension); detects
+  ambiguous base filenames across subfolders (`NomeBaseAmbiguo`); groups
+  CSV rows by filename to support multiple boxes per image; cross-checks
+  the CSV's `width`/`height` columns against the derived bbox dimensions
+  (confirmed numerically that these columns are box dimensions, not image
+  dimensions — matches a suspicion documented, now unverified claims
+  replaced with direct confirmation). Deliberately does NOT hardcode the
+  "images are always 1280×720" assumption seen in prior documentation —
+  always reads real image dimensions instead, verified only on a 5-image
+  sample. `scripts/extrair_aboships.py` chains extraction + unified filter
+  + Drive copy. Covered by `tests/test_extrair_crops_csv_abo.py`
+  (6 tests) — all passing. Full suite: 47/47 passing. This completes task
+  -1.6's code for all three public crop sources (SMD, SeaShips, ABOShips);
+  none of the three extraction scripts has been run against real data yet.

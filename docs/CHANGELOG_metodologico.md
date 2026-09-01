@@ -388,3 +388,39 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
 - **Escopo NÃO coberto ainda**: execução real contra o `SeaShips_voc.zip`
   do Drive (script pronto, mas não rodado nesta sessão); extração do
   ABOShips (formato CSV, ainda não inspecionado).
+
+## 2026-09-01 — Tarefa -1.6 (terceira fonte, ABOShips): estrutura verificada e extrator escrito
+
+- **Estrutura real do ABOShips verificada** (`ABOships.zip`, 9.899
+  entradas): 9.880 imagens `.png`, um único arquivo de anotação
+  `ABOshipsDataset/Labels/Vesibussi_Labels.csv` com colunas
+  `filename,width,height,class,xmin,xmax,ymin,ymax`. Imagens distribuídas
+  em 16 subpastas por data (`Seaships/20180626/` a `Seaships/20180708/`).
+- **Achado confirmado por verificação numérica direta** (não herdado sem
+  checagem): `width`/`height` do CSV são as dimensões da **caixa**
+  (`xmax-xmin`, `ymax-ymin`), não da imagem — conferido na primeira linha
+  de amostra (width=38 = 520-482; height=24 = 339-315). Consistente com a
+  suspeita registrada no changelog do projeto anterior, agora comprovada
+  com números, não apenas citada.
+- **Achado parcialmente confirmado, tratado com cautela**: as 5 imagens de
+  amostra verificadas são todas 1280×720, consistente com a suposição
+  herdada de "imagem sempre 1280×720" — mas **essa suposição não foi
+  codificada** no extrator. `extrair_crops_de_csv_abo` sempre abre a
+  imagem real para obter as dimensões (mesmo princípio já aplicado a SMD e
+  SeaShips), evitando risco caso alguma imagem, entre as 9.880, fuja dessa
+  dimensão (não verificamos as 9.880, só uma amostra de 5).
+- **Entregue**: `src/extraction/extrair_crops_csv_abo.py` — indexa todas as
+  imagens por nome-base entre as 16 subpastas de data antes de processar o
+  CSV (o CSV não referencia a subpasta), com detecção de nome-base ambíguo
+  (`NomeBaseAmbiguo`) caso duas imagens em subpastas diferentes
+  compartilhem o mesmo nome-base. Agrupa linhas do CSV por `filename`
+  (múltiplas caixas por imagem são suportadas) e registra, por caixa, uma
+  checagem de consistência entre `width`/`height` do CSV e a bbox derivada
+  de xmin/xmax/ymin/ymax. `scripts/extrair_aboships.py` conecta extração +
+  filtro unificado (-1.3) + cópia para o Drive. Coberto por
+  `tests/test_extrair_crops_csv_abo.py` (6 testes) — todos passando. Suíte
+  completa: 47/47.
+- **Fase -1.6 agora coberta para as três fontes públicas de crops (SMD,
+  SeaShips, ABOShips)** — falta apenas rodar os três scripts contra os
+  dados reais no Drive (nenhum foi executado além do teste sintético nesta
+  sessão) e decidir `min_dim_px` na tarefa 0.2.
