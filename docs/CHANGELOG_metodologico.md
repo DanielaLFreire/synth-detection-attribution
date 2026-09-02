@@ -746,3 +746,29 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   reutilizável).
 - Suíte completa: 74/74 (mudança não afeta testes existentes, que não
   exercitam inferência real).
+
+## 2026-09-02 — Teste real do SAM 3 no SMD: resultado e decisão
+
+- **Resultado do pool completo (7.043 crops)**: cobertura média 0,527
+  (SAM 1: 0,481), cobertura mínima 0,000 (SAM 1: 0,168), apenas 5 crops
+  (0,07%) abaixo de 0,15 de cobertura.
+- **Investigação dos 5 casos de cobertura zero**: 3 das 5 falhas vêm do
+  mesmo vídeo (`MVI_1623_VIS`, mesmo `box_index=1`, frames 180/280/300) —
+  provavelmente o mesmo objeto rastreado ao longo do vídeo, não 5 falhas
+  independentes. Inspeção visual (caixa desenhada sobre a cena original)
+  confirmou: todos os 3 casos verificados são objetos genuinamente
+  minúsculos (19×18px a 43×24px) na borda extrema da imagem, no limite do
+  que é visualmente distinguível do fundo de água mesmo a olho nu — não
+  um defeito do SAM 3 nem do nosso código de correspondência por IoU.
+- **Interpretação**: a salvaguarda de IoU (`indice_melhor_iou`) funcionou
+  como projetado — quando nenhuma instância detectada corresponde de
+  forma confiável à caixa de anotação, o resultado é cobertura zero
+  (falha visível e auditável no manifesto), não uma máscara errada
+  aceita silenciosamente. Comportamento preferível a uma segmentação
+  ruim não sinalizada.
+- **Decisão**: adotar `SegmentadorSAM3` como segmentador padrão para as
+  quatro fontes deste projeto (SMD, SeaShips, ABOShips, UA-DETRAC),
+  substituindo o `SegmentadorSAM` (SAM 1) usado no teste inicial. Ambos
+  os pools do SMD (SAM 1 em `crops_sam/`, SAM 3 em `crops_sam3/`)
+  permanecem no Drive para eventual comparação futura, mas `crops_sam3/`
+  é o candidato a pool oficial deste projeto.
