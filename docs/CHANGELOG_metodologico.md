@@ -590,3 +590,84 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   verdade — as três fontes (mais UA-DETRAC) continuam com os ~143 mil
   crops já extraídos em modo retangular no Drive. Rodar o SAM de verdade
   exige GPU e o checkpoint (`sam_vit_b_01ec64.pth`).
+
+## 2026-09-01 — SAM 3 investigado e implementado (acesso solicitado, pendente aprovação)
+
+- **SAM 3 confirmado real e atual**: lançado pela Meta em 19/11/2025
+  (`facebookresearch/sam3`, paper Carion et al., 2025, arXiv:2511.16719).
+  Ponto forte declarado e relevante para este projeto: desempenho melhor
+  em objetos finos, pequenos, de baixo contraste — perfil que já medimos
+  como o do CITRA-3D-Real na tarefa 0.1 (mediana ~30px).
+- **Licença lida na íntegra** ("SAM License", atualizada 19/11/2025):
+  concede uso/reprodução/distribuição/modificação de forma ampla; exige
+  reconhecimento em publicações que usem o modelo; redistribuição de
+  materiais SAM (ou obras derivadas) deve carregar os mesmos termos. Ponto
+  não resolvido com certeza (não somos advogados): se os CROPS gerados
+  usando o modelo contam como "obra derivada dos materiais SAM" para fins
+  de redistribuição — a cláusula de isenção de garantia trata "saídas e
+  resultados" como parte do escopo do acordo, sem definir claramente a
+  obrigação sobre eles. Não bloqueia uso interno de pesquisa; relevante se
+  os crops segmentados forem publicados num repositório de reprodutibilidade
+  — sinalizar para conformidade institucional nesse momento, não decidido
+  unilateralmente aqui.
+- **Fricção prática identificada**: acesso aos checkpoints requer
+  aprovação via Hugging Face (portão de acesso), mesmo padrão de risco de
+  atraso já enfrentado na decisão do UA-DETRAC (§2.3). Requisitos também
+  mais pesados: Python 3.12+, PyTorch 2.7+, CUDA 12.6+.
+- **Decisão**: solicitar acesso ao SAM 3 agora, escrever o código enquanto
+  aguarda aprovação, testar assim que liberado. SAM 1 (Apache 2.0, sem
+  portão) permanece disponível e funcional como alternativa não-bloqueada.
+- **Decisão de design do `SegmentadorSAM3`**: a API pública confirmada do
+  pacote `sam3` usa prompt de TEXTO (`Sam3Processor.set_text_prompt`), não
+  um prompt de caixa equivalente ao `SamPredictor.predict(box=...)` do
+  SAM 1/2 — não foi possível confirmar, a partir da documentação
+  disponível sem acesso ao pacote instalado, o nome exato de um método de
+  prompt de caixa no SAM 3 (preferimos não arriscar um nome de método não
+  verificado). Solução: usar o prompt de texto (retorna máscaras+caixas
+  para todas as instâncias do conceito) e selecionar, entre as instâncias
+  retornadas, a de maior IoU contra a caixa de anotação já conhecida
+  (`indice_melhor_iou`, função pura testada com 4 casos). Se nenhuma
+  instância atingir o IoU mínimo, tratada como sem máscara disponível
+  (mesmo comportamento já existente no filtro de qualidade para SAM
+  ausente).
+- Coberto por 4 novos testes em `tests/test_sam_segment.py`. Suíte
+  completa: 71/71. O carregamento real (`SegmentadorSAM3.carregar`) não é
+  testável neste ambiente (sem GPU, acesso pendente) — mesma limitação já
+  aceita para `SegmentadorSAM` (SAM 1).
+- **Referência adicionada**: Carion, N. et al. (2025). "SAM 3: Segment
+  Anything with Concepts." arXiv:2511.16719.
+
+## 2026-09-01 — Correção do SegmentadorSAM3: prompt de caixa confirmado por leitura direta do código-fonte
+
+- **Achado**: clonei o repositório oficial `facebookresearch/sam3` (código
+  público, só os checkpoints exigem aprovação) e li diretamente
+  `sam3/model/sam3_image_processor.py`. Isso **corrigiu** a suposição
+  anterior (registrada mais cedo hoje): existe sim um método de prompt de
+  caixa, `Sam3Processor.add_geometric_prompt(box, label, state)`, formato
+  `[cx, cy, w, h]` normalizado em [0,1] — funcionalmente equivalente ao
+  `SamPredictor.predict(box=...)` do SAM 1/2. Não é preciso o esquema de
+  prompt de texto + correspondência por IoU que foi implementado como
+  contorno; a implementação foi reescrita para usar o método real.
+- **Detalhe de uso descoberto na leitura do código, não documentado nas
+  fontes secundárias consultadas antes**: `add_geometric_prompt` acumula
+  caixas no estado (via `geometric_prompt.append_boxes`) em vez de
+  substituir — processar múltiplas caixas da mesma imagem exige chamar
+  `reset_all_prompts(state)` entre uma caixa e outra, preservando o
+  encoding da imagem já calculado (`state["backbone_out"]`, não afetado
+  pelo reset) mas limpando o prompt geométrico anterior. Implementado em
+  `SegmentadorSAM3.segmentar()`.
+- **A correspondência por IoU não foi descartada** — mantida como
+  segurança adicional, já que múltiplas instâncias ainda podem passar do
+  limiar de confiança mesmo com prompt de caixa; a função
+  `indice_melhor_iou` já testada continua em uso, agora como salvaguarda
+  em vez de mecanismo principal.
+- **Nota de método**: este é um exemplo concreto de por que preferimos
+  verificar contra a fonte primária quando possível, em vez de confiar só
+  em buscas — a implementação anterior (baseada em documentação de
+  terceiros) teria funcionado, mas de forma mais indireta e com um passo
+  a mais (prompt de texto) que a API real não exige.
+- Adicionados 3 testes de conversão de formato de caixa
+  (`_caixa_absoluta_para_cxcywh_normalizado`), incluindo um que confirma a
+  consistência com a mesma convenção cx/cy/w/h já usada em todo o projeto
+  (compose.py, extrair_crops_de_yolo.py), só no sentido inverso. Suíte
+  completa: 74/74.

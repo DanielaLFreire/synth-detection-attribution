@@ -102,6 +102,17 @@ nova decisão for justificada por literatura.
   (`SegmentadorSAM`) usado para isolar o objeto do fundo em cada crop
   antes da composição, mitigando o risco de shortcut learning acima.
 
+- **Carion, N. et al. (2025).** "SAM 3: Segment Anything with Concepts."
+  *arXiv:2511.16719*.
+  Uso neste projeto: alternativa mais recente ao SAM 1, com desempenho
+  declarado superior em objetos finos/pequenos/baixo contraste
+  (`SegmentadorSAM3`) — mesmo perfil dos objetos do CITRA-3D-Real.
+  Usa prompt de caixa via `Sam3Processor.add_geometric_prompt` (confirmado
+  por leitura direta do código-fonte oficial, não documentação de
+  terceiros — ver `CHANGELOG_metodologico.md`, 2026-09-01). Acesso aos
+  checkpoints pendente de aprovação (Hugging Face); leitura da licença
+  registrada na mesma entrada do changelog.
+
 ### Linhagem intelectual do projeto (não é este projeto, mas é o trabalho do qual ele herda perguntas e lições)
 
 - **Freire, D.L., Teixeira, E.H., Moreira, L.A.S. (2026).** "Visual

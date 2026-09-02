@@ -131,3 +131,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   integration test. Full suite: 67/67 passing. Pending: no real crop has
   been reprocessed with actual SAM yet (requires GPU + checkpoint); the
   ~143k crops already on Drive remain rectangular.
+- `src/segmentation/sam_segment.py`: added `SegmentadorSAM3` (Meta SAM 3,
+  Carion et al. 2025) as an alternative to `SegmentadorSAM` (SAM 1), given
+  SAM 3's stronger reported performance on thin/small/low-contrast objects
+  — directly relevant to this project's object size profile. **Corrected**
+  after cloning the official `facebookresearch/sam3` repo (public code,
+  only checkpoints are gated) and reading `sam3_image_processor.py`
+  directly: a box-prompt method does exist
+  (`Sam3Processor.add_geometric_prompt`, `[cx,cy,w,h]` normalized format),
+  contradicting an earlier assumption based on secondary documentation
+  that led to a text-prompt+IoU workaround. Rewritten to use the real
+  method; IoU matching (`indice_melhor_iou`) kept as a safety net, not the
+  primary mechanism. Also discovered and handled a source-level detail not
+  covered in secondary docs: box prompts accumulate in state rather than
+  replacing, requiring `reset_all_prompts` between boxes on the same
+  image. Covered by 3 new box-format conversion tests. Full suite: 74/74
+  passing.
