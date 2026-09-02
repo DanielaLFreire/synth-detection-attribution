@@ -671,3 +671,25 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   consistência com a mesma convenção cx/cy/w/h já usada em todo o projeto
   (compose.py, extrair_crops_de_yolo.py), só no sentido inverso. Suíte
   completa: 74/74.
+
+## 2026-09-01 — SAM 3 instalado no Colab: conflito de numpy com SHAP identificado
+
+- **Instalação do pacote `sam3` bem-sucedida** via
+  `git clone` + `pip install -e .` no Colab (código público, sem portão —
+  só os checkpoints exigem aprovação).
+- **Conflito de dependência identificado**: `sam3` exige `numpy<2`, o que
+  forçou o rebaixamento de `numpy 2.1.3` para `1.26.4` no ambiente,
+  quebrando a compatibilidade declarada de vários pacotes que exigem
+  `numpy>=2` já presentes no Colab -- entre eles, **`shap`**, que é a
+  ferramenta central do Estágio A (§5 do plano).
+- **Decisão operacional**: SAM 3 (ou SAM 1) e SHAP nunca devem ser
+  instalados/usados na MESMA sessão de runtime do Colab. Segmentação de
+  crops (Fase -1) e análise de importância de features com SHAP (Estágio
+  A) já ocorrem em fases distintas do cronograma -- a separação de
+  ambiente é uma restrição operacional a documentar, não uma mudança de
+  desenho. Usar sessões de runtime dedicadas: uma para segmentação
+  (sam3/segment_anything + torch), outra para análise (shap + modelo
+  substituto).
+- **Ação necessária**: reiniciar a sessão do Colab após a instalação do
+  `sam3` (exigido pelo próprio Colab após troca de versão do numpy) antes
+  de prosseguir com qualquer segmentação.
