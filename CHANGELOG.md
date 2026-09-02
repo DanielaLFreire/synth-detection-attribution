@@ -145,5 +145,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   primary mechanism. Also discovered and handled a source-level detail not
   covered in secondary docs: box prompts accumulate in state rather than
   replacing, requiring `reset_all_prompts` between boxes on the same
-  image. Covered by 3 new box-format conversion tests. Full suite: 74/74
-  passing.
+  image. Covered by 3 new box-format conversion tests.
+- `src/segmentation/sam_segment.py`: `SegmentadorSAM3.carregar()` now
+  accepts and forwards an optional `bpe_path` parameter, working around a
+  third-party bug (`pkg_resources.resource_filename` fails on editable
+  installs under Python 3.13, since `sam3.__file__` resolves to `None` in
+  that install mode) discovered when actually loading the model after SAM
+  3 checkpoint access was approved. No changes to the `sam3` package
+  itself were needed — `build_sam3_image_model` already exposes this
+  parameter. Full suite: 74/74 passing (unaffected, since real loading
+  requires GPU and isn't exercised by tests).

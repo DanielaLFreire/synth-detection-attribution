@@ -693,3 +693,30 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
 - **Ação necessária**: reiniciar a sessão do Colab após a instalação do
   `sam3` (exigido pelo próprio Colab após troca de versão do numpy) antes
   de prosseguir com qualquer segmentação.
+
+## 2026-09-02 — Acesso ao SAM 3 aprovado; bug de instalação editável corrigido
+
+- **Acesso aos checkpoints do SAM 3 aprovado** via Hugging Face (status
+  "ACCEPTED", conta institucional).
+- **Bug encontrado ao carregar o modelo pela primeira vez**:
+  `build_sam3_image_model()` (dentro do próprio pacote `sam3`, não código
+  nosso) falha com `TypeError: expected str, bytes or os.PathLike object,
+  not NoneType` ao tentar localizar `assets/bpe_simple_vocab_16e6.txt.gz`
+  via `pkg_resources.resource_filename`. Causa raiz: `pkg_resources`
+  (biblioteca legada de descoberta de recursos) não consegue resolver
+  `sam3.__file__` quando o pacote foi instalado em modo editável
+  (`pip install -e .`, PEP 660) em Python 3.13 com setuptools recente —
+  `__file__` fica `None` nesse cenário, quebrando a lógica interna do
+  `pkg_resources`. Bug da interação entre bibliotecas de terceiros
+  (`pkg_resources` + instalação editável), não do nosso código nem da
+  lógica do SAM 3 em si.
+- **Correção aplicada**: `build_sam3_image_model` já aceita um parâmetro
+  opcional `bpe_path` que, se fornecido, ignora completamente a busca
+  automática quebrada. `SegmentadorSAM3.carregar()` foi atualizado para
+  aceitar e repassar esse parâmetro — quando fornecido explicitamente
+  (caminho para `assets/bpe_simple_vocab_16e6.txt.gz` dentro do clone
+  local do `sam3`), o carregamento funciona normalmente. Não foi
+  necessário modificar nenhum arquivo do pacote `sam3` em si.
+- Suíte completa após a mudança de assinatura: 74/74 passando (a mudança
+  não afeta nenhum teste existente, já que `bpe_path` é opcional e os
+  testes não exercitam o carregamento real, que depende de GPU).

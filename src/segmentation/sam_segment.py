@@ -188,11 +188,30 @@ class SegmentadorSAM3:
         self._imagem_atual_id: int | None = None
 
     @classmethod
-    def carregar(cls) -> "SegmentadorSAM3":
+    def carregar(cls, bpe_path: str | None = None) -> "SegmentadorSAM3":
+        """Carrega o modelo SAM 3 para segmentação por imagem.
+
+        `bpe_path`: caminho explícito para o vocabulário BPE
+        (`assets/bpe_simple_vocab_16e6.txt.gz`, dentro do repositório
+        `facebookresearch/sam3` clonado). PRECISA ser fornecido quando o
+        pacote foi instalado em modo editável (`pip install -e .`) --
+        nesse modo, `build_sam3_image_model(bpe_path=None)` tenta
+        descobrir o caminho sozinho via `pkg_resources.resource_filename`,
+        que falha com `TypeError: expected str, bytes or os.PathLike
+        object, not NoneType` porque a instalação editável em Python
+        3.13+/setuptools recentes deixa `sam3.__file__` como None -- bug
+        conhecido da interação entre `pkg_resources` (biblioteca legada) e
+        instalação editável via PEP 660, não um bug do nosso código. Ver
+        docs/CHANGELOG_metodologico.md (2026-09-02) para o registro
+        completo.
+
+        Exemplo: se você clonou o sam3 em `/content/sam3`, passe
+        `bpe_path="/content/sam3/sam3/assets/bpe_simple_vocab_16e6.txt.gz"`.
+        """
         from sam3.model_builder import build_sam3_image_model  # import tardio
         from sam3.model.sam3_image_processor import Sam3Processor
 
-        model = build_sam3_image_model()
+        model = build_sam3_image_model(bpe_path=bpe_path)
         processor = Sam3Processor(model)
         return cls(processor)
 
