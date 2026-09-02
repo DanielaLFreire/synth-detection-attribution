@@ -18,6 +18,12 @@ Particularidade estrutural: o CSV referencia imagens só pelo nome-base
 (sem subpasta de data, sem extensão) -- as imagens estão distribuídas em
 16 subpastas por data dentro do zip. Este módulo indexa todas as imagens
 por nome-base antes de processar o CSV.
+
+Modo de extração: recorte retangular por padrão, OU segmentação (via
+parâmetro `segmentador`) -- mesmo padrão dos outros dois extratores, ver
+docstring de extrair_crops_yolo.py e src/segmentation/sam_segment.py.
+Este extrator já salvava sempre em .png (independente do segmentador), por
+isso a saída já é compatível com canal alpha sem mudança adicional.
 """
 from __future__ import annotations
 
@@ -27,9 +33,12 @@ from dataclasses import dataclass, fields, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
-EXTRACAO_CSV_ABO_MANIFEST_VERSION = "1.0"
+from src.segmentation import Segmentador, aplicar_mascara_e_recortar
+
+EXTRACAO_CSV_ABO_MANIFEST_VERSION = "1.1"  # bump: campo cobertura_mascara adicionado
 _EXTENSOES_IMAGEM = (".png", ".jpg", ".jpeg")
 
 
@@ -48,6 +57,7 @@ class LinhaExtracaoCsvAbo:
     extraido: bool
     motivo: str
     caminho_crop: str
+    cobertura_mascara: str = ""  # "" quando modo retangular (sem segmentador)
 
 
 _FIELDNAMES = [f.name for f in fields(LinhaExtracaoCsvAbo)]
@@ -80,6 +90,7 @@ def extrair_crops_de_csv_abo(
     caminho_csv: Path,
     saida_crops_dir: Path,
     manifesto_csv: Path,
+    segmentador: Segmentador | None = None,
 ) -> list[tuple[str, Path]]:
     imagens_dir = Path(imagens_dir)
     saida_crops_dir = Path(saida_crops_dir)
@@ -119,6 +130,7 @@ def extrair_crops_de_csv_abo(
 
             with Image.open(caminho_imagem) as img:
                 tamanho_real = img.size  # sempre lido da imagem real, nunca assumido
+                img_np = np.array(img.convert("RGB")) if segmentador is not None else None
 
                 for i, linha in enumerate(linhas):
                     xmin, xmax = int(linha["xmin"]), int(linha["xmax"])
@@ -142,9 +154,17 @@ def extrair_crops_de_csv_abo(
                         )))
                         continue
 
-                    crop = img.crop((x0, y0, x1, y1))
                     caminho_crop = saida_crops_dir / f"{filename}_box{i:03d}.png"
-                    crop.save(caminho_crop)
+                    cobertura_str = ""
+
+                    if segmentador is not None:
+                        mascara = segmentador.segmentar(img_np, (x0, y0, x1, y1))
+                        resultado = aplicar_mascara_e_recortar(img_np, (x0, y0, x1, y1), mascara)
+                        resultado.crop_rgba.save(caminho_crop)
+                        cobertura_str = f"{resultado.cobertura_mascara:.4f}"
+                    else:
+                        crop = img.crop((x0, y0, x1, y1))
+                        crop.save(caminho_crop)
 
                     writer.writerow(asdict(LinhaExtracaoCsvAbo(
                         manifest_version=EXTRACAO_CSV_ABO_MANIFEST_VERSION,
@@ -153,6 +173,7 @@ def extrair_crops_de_csv_abo(
                         classe_original_fonte=classe, largura_px=x1 - x0, altura_px=y1 - y0,
                         width_height_csv_conferem_com_bbox=str(conferem),
                         extraido=True, motivo="ok", caminho_crop=str(caminho_crop),
+                        cobertura_mascara=cobertura_str,
                     )))
                     extraidos.append((fonte, caminho_crop))
 

@@ -117,13 +117,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   source identity. `Segmentador` protocol enables full testability without
   GPU/SAM weights via a fake segmentador; `SegmentadorSAM` (real, lazy
   `segment_anything`/`torch` import) always segments on the ORIGINAL image,
-  never on an already-cropped patch. `extrair_crops_de_yolo` (SMD,
-  UA-DETRAC) updated with an optional `segmentador` parameter (backward
-  compatible, default preserves old rectangular behavior); manifest gains
-  `cobertura_mascara` (bump 1.0→1.1). New `carregar_coberturas_do_manifesto_extracao`
+  never on an already-cropped patch. All three per-source extractors
+  (`extrair_crops_de_yolo` for SMD, `extrair_crops_de_voc` for SeaShips,
+  `extrair_crops_de_csv_abo` for ABOShips) updated with an optional
+  `segmentador` parameter (backward compatible, default preserves old
+  rectangular behavior); manifests gain `cobertura_mascara` (version bumps
+  1.0→1.1 across all three). New `carregar_coberturas_do_manifesto_extracao`
   bridges extraction output into the existing `filtrar_pool_de_crops`
-  quality filter (-1.3), tested end-to-end. VOC/CSV extractors (SeaShips,
-  ABOShips) NOT yet updated with the same segmentador support — explicit
-  pending item. Covered by `tests/test_sam_segment.py` (4 tests) + 3 new
-  tests in `test_extrair_crops_yolo.py` + 1 integration test in
-  `test_extraction.py`. Full suite: 63/63 passing.
+  quality filter (-1.3), tested end-to-end. All three chaining scripts
+  (`extrair_smd.py`, `extrair_seaships.py`, `extrair_aboships.py`) accept
+  and forward an optional `segmentador`. Covered by `tests/test_sam_segment.py`
+  (4 tests) + 7 new tests across the three extractor test files + 1
+  integration test. Full suite: 67/67 passing. Pending: no real crop has
+  been reprocessed with actual SAM yet (requires GPU + checkpoint); the
+  ~143k crops already on Drive remain rectangular.

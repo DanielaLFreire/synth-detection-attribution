@@ -124,3 +124,56 @@ def test_caixa_degenerada_e_pulada_sem_interromper_o_lote(tmp_path):
         linhas = list(csv.DictReader(f))
     degenerada = next(l for l in linhas if l["box_index"] == "0")
     assert degenerada["motivo"] == "bbox_degenerada"
+
+
+class _SegmentadorFalsoMetade:
+    def segmentar(self, imagem_rgb, caixa):
+        import numpy as np
+        mascara = np.zeros(imagem_rgb.shape[:2], dtype=bool)
+        x0, y0, x1, y1 = caixa
+        meio = x0 + (x1 - x0) // 2
+        mascara[y0:y1, x0:meio] = True
+        return mascara
+
+
+def test_com_segmentador_saida_e_png_com_alpha_e_cobertura_registrada(tmp_path):
+    imagens_dir, anotacoes_dir = _criar_fonte_voc_sintetica(tmp_path, {
+        "img1": {
+            "tamanho_real": (200, 100), "tamanho_xml": (200, 100),
+            "objetos": [("ore carrier", 10, 10, 90, 90)],
+        },
+    })
+    manifesto_csv = tmp_path / "manifesto.csv"
+
+    extraidos = extrair_crops_de_voc(
+        fonte="SeaShips", imagens_dir=imagens_dir, anotacoes_dir=anotacoes_dir,
+        saida_crops_dir=tmp_path / "crops", manifesto_csv=manifesto_csv,
+        segmentador=_SegmentadorFalsoMetade(),
+    )
+    assert len(extraidos) == 1
+    _, caminho_crop = extraidos[0]
+    assert caminho_crop.suffix == ".png"
+    with Image.open(caminho_crop) as img_salva:
+        assert img_salva.mode == "RGBA"
+
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        linhas = list(csv.DictReader(f))
+    assert abs(float(linhas[0]["cobertura_mascara"]) - 0.5) < 0.05
+
+
+def test_sem_segmentador_cobertura_mascara_vazia(tmp_path):
+    imagens_dir, anotacoes_dir = _criar_fonte_voc_sintetica(tmp_path, {
+        "img1": {
+            "tamanho_real": (200, 100), "tamanho_xml": (200, 100),
+            "objetos": [("ore carrier", 10, 10, 60, 50)],
+        },
+    })
+    manifesto_csv = tmp_path / "manifesto.csv"
+
+    extrair_crops_de_voc(
+        fonte="SeaShips", imagens_dir=imagens_dir, anotacoes_dir=anotacoes_dir,
+        saida_crops_dir=tmp_path / "crops", manifesto_csv=manifesto_csv,
+    )
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        linhas = list(csv.DictReader(f))
+    assert linhas[0]["cobertura_mascara"] == ""

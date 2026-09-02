@@ -29,6 +29,7 @@ import zipfile
 from pathlib import Path
 
 from src.extraction import extrair_crops_de_yolo, filtrar_pool_de_crops, FiltroConfig
+from src.segmentation import Segmentador
 
 
 def main(
@@ -37,6 +38,7 @@ def main(
     destino_crops_drive: str,
     min_dim_px: int,
     split_smd: str = "test",  # ver achado registrado: todo o SMD útil está em test/
+    segmentador: Segmentador | None = None,
 ) -> None:
     caminho_zip = Path(caminho_zip)
     destino_extracao_local = Path(destino_extracao_local)
@@ -63,6 +65,7 @@ def main(
         labels_dir=labels_dir,
         saida_crops_dir=crops_brutos_dir,
         manifesto_csv=destino_extracao_local / "manifesto_extracao_bruta_smd.csv",
+        segmentador=segmentador,
     )
     print(f"   {len(extraidos)} crops extraídos (antes do filtro de qualidade).")
 

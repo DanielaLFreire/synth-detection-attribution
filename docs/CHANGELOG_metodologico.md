@@ -566,3 +566,27 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   os ~143 mil crops já extraídos em modo retangular — reprocessamento
   necessário, os crops retangulares já gerados não são reaproveitáveis
   neste novo modo.
+
+## 2026-09-01 — Segmentador replicado nos extratores VOC e CSV, e nos três scripts de ponta a ponta
+
+- **Extrator VOC (SeaShips)** e **extrator CSV (ABOShips)** atualizados
+  com o mesmo parâmetro opcional `segmentador`, mesmo contrato do extrator
+  YOLO: roda sobre a imagem original, produz `.png` com canal alpha,
+  registra `cobertura_mascara` no manifesto (bump de versão 1.0→1.1 em
+  ambos, mesmo padrão do YOLO). Retrocompatível — testes antigos (modo
+  retangular) continuam passando sem alteração.
+- **As quatro fontes agora têm o mesmo mecanismo disponível e
+  consistente** — não existe mais risco de uma fonte usar segmentação e
+  outra não por causa de uma peça de código faltando, só por decisão
+  explícita de quando rodar cada uma.
+- Os três scripts de ponta a ponta (`extrair_smd.py`, `extrair_seaships.py`,
+  `extrair_aboships.py`) ganharam o parâmetro `segmentador: Segmentador |
+  None = None`, repassado à função de extração correspondente — sem isso,
+  a capacidade existiria na biblioteca mas não seria alcançável pelos
+  scripts que de fato rodamos no Colab.
+- Coberto por 4 novos testes (2 no extrator VOC, 2 no CSV) seguindo
+  exatamente o padrão já validado no YOLO. Suíte completa: 67/67.
+- **Ainda pendente**: nenhum crop real foi reprocessado com SAM de
+  verdade — as três fontes (mais UA-DETRAC) continuam com os ~143 mil
+  crops já extraídos em modo retangular no Drive. Rodar o SAM de verdade
+  exige GPU e o checkpoint (`sam_vit_b_01ec64.pth`).

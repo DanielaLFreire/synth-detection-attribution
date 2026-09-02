@@ -146,3 +146,46 @@ def test_linha_do_csv_sem_imagem_correspondente_e_registrada(tmp_path):
     with open(manifesto_csv, newline="", encoding="utf-8") as f:
         linhas = list(csv.DictReader(f))
     assert linhas[0]["motivo"] == "imagem_nao_encontrada_no_indice"
+
+
+class _SegmentadorFalsoMetade:
+    def segmentar(self, imagem_rgb, caixa):
+        import numpy as np
+        mascara = np.zeros(imagem_rgb.shape[:2], dtype=bool)
+        x0, y0, x1, y1 = caixa
+        meio = x0 + (x1 - x0) // 2
+        mascara[y0:y1, x0:meio] = True
+        return mascara
+
+
+def test_com_segmentador_saida_com_alpha_e_cobertura_registrada(tmp_path):
+    imagens_dir, caminho_csv = _criar_fonte_abo_sintetica(tmp_path)
+    manifesto_csv = tmp_path / "manifesto.csv"
+
+    extraidos = extrair_crops_de_csv_abo(
+        fonte="ABOShips", imagens_dir=imagens_dir, caminho_csv=caminho_csv,
+        saida_crops_dir=tmp_path / "crops", manifesto_csv=manifesto_csv,
+        segmentador=_SegmentadorFalsoMetade(),
+    )
+    assert len(extraidos) == 3
+    for _, caminho_crop in extraidos:
+        with Image.open(caminho_crop) as img_salva:
+            assert img_salva.mode == "RGBA"
+
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        linhas = list(csv.DictReader(f))
+    for linha in linhas:
+        assert abs(float(linha["cobertura_mascara"]) - 0.5) < 0.05
+
+
+def test_sem_segmentador_cobertura_mascara_vazia(tmp_path):
+    imagens_dir, caminho_csv = _criar_fonte_abo_sintetica(tmp_path)
+    manifesto_csv = tmp_path / "manifesto.csv"
+
+    extrair_crops_de_csv_abo(
+        fonte="ABOShips", imagens_dir=imagens_dir, caminho_csv=caminho_csv,
+        saida_crops_dir=tmp_path / "crops", manifesto_csv=manifesto_csv,
+    )
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        linhas = list(csv.DictReader(f))
+    assert all(l["cobertura_mascara"] == "" for l in linhas)

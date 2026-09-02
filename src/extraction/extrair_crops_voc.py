@@ -14,6 +14,12 @@ descrição do dataset no artigo, não usada para filtrar).
 Checagem de auditoria incluída: VOC XML normalmente also guarda <width>/
 <height> da imagem dentro do próprio XML -- comparamos com o tamanho real
 do arquivo de imagem e sinalizamos (não abortamos) divergência.
+
+Modo de extração: recorte retangular por padrão, OU segmentação (via
+parâmetro `segmentador`) -- mesmo padrão do extrator YOLO, ver docstring
+de extrair_crops_yolo.py e src/segmentation/sam_segment.py para a
+justificativa completa (mitigação de shortcut learning, Geirhos et al.,
+2020). Quando `segmentador` é fornecido, a saída é sempre .png.
 """
 from __future__ import annotations
 
@@ -23,9 +29,12 @@ from dataclasses import dataclass, fields, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
-EXTRACAO_VOC_MANIFEST_VERSION = "1.0"
+from src.segmentation import Segmentador, aplicar_mascara_e_recortar
+
+EXTRACAO_VOC_MANIFEST_VERSION = "1.1"  # bump: campo cobertura_mascara adicionado
 
 
 @dataclass
@@ -43,6 +52,7 @@ class LinhaExtracaoVoc:
     extraido: bool
     motivo: str
     caminho_crop: str
+    cobertura_mascara: str = ""  # "" quando modo retangular (sem segmentador)
 
 
 _FIELDNAMES = [f.name for f in fields(LinhaExtracaoVoc)]
@@ -93,11 +103,15 @@ def extrair_crops_de_voc(
     saida_crops_dir: Path,
     manifesto_csv: Path,
     extensao_imagem: str = ".jpg",
+    segmentador: Segmentador | None = None,
 ) -> list[tuple[str, Path]]:
     """Extrai um arquivo de crop por <object> de cada anotação VOC XML.
 
     Mesma filosofia de tolerância do extrator YOLO (-1.6, SMD): caixa
     degenerada ou órfão são pulados e registrados, não interrompem o lote.
+
+    `segmentador`: ver extrair_crops_yolo.py -- mesmo contrato. Roda
+    sempre sobre a imagem original, produz saída .png com canal alpha.
     """
     imagens_dir = Path(imagens_dir)
     anotacoes_dir = Path(anotacoes_dir)
@@ -105,6 +119,8 @@ def extrair_crops_de_voc(
     saida_crops_dir.mkdir(parents=True, exist_ok=True)
     manifesto_csv = Path(manifesto_csv)
     manifesto_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    ext_saida = ".png" if segmentador is not None else extensao_imagem
 
     run_id = datetime.now(timezone.utc).strftime("extracao_voc_%Y%m%dT%H%M%SZ")
     extraidos: list[tuple[str, Path]] = []
@@ -135,6 +151,7 @@ def extrair_crops_de_voc(
             with Image.open(caminho_imagem) as img:
                 tamanho_real = img.size
                 conferem = "" if tamanho_xml is None else str(tamanho_xml == tamanho_real)
+                img_np = np.array(img.convert("RGB")) if segmentador is not None else None
 
                 for i, obj in enumerate(objetos):
                     x0, y0 = max(0, obj.xmin), max(0, obj.ymin)
@@ -151,9 +168,17 @@ def extrair_crops_de_voc(
                         )))
                         continue
 
-                    crop = img.crop((x0, y0, x1, y1))
-                    caminho_crop = saida_crops_dir / f"{stem}_box{i:03d}{extensao_imagem}"
-                    crop.save(caminho_crop)
+                    caminho_crop = saida_crops_dir / f"{stem}_box{i:03d}{ext_saida}"
+                    cobertura_str = ""
+
+                    if segmentador is not None:
+                        mascara = segmentador.segmentar(img_np, (x0, y0, x1, y1))
+                        resultado = aplicar_mascara_e_recortar(img_np, (x0, y0, x1, y1), mascara)
+                        resultado.crop_rgba.save(caminho_crop)
+                        cobertura_str = f"{resultado.cobertura_mascara:.4f}"
+                    else:
+                        crop = img.crop((x0, y0, x1, y1))
+                        crop.save(caminho_crop)
 
                     writer.writerow(asdict(LinhaExtracaoVoc(
                         manifest_version=EXTRACAO_VOC_MANIFEST_VERSION,
@@ -162,6 +187,7 @@ def extrair_crops_de_voc(
                         classe_original_fonte=obj.classe, largura_px=x1 - x0, altura_px=y1 - y0,
                         dimensoes_xml_conferem_com_imagem=conferem,
                         extraido=True, motivo="ok", caminho_crop=str(caminho_crop),
+                        cobertura_mascara=cobertura_str,
                     )))
                     extraidos.append((fonte, caminho_crop))
 

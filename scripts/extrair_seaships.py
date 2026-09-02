@@ -30,6 +30,7 @@ from src.extraction import (
     filtrar_pool_de_crops,
     FiltroConfig,
 )
+from src.segmentation import Segmentador
 
 
 def main(
@@ -37,6 +38,7 @@ def main(
     destino_extracao_local: str,
     destino_crops_drive: str,
     min_dim_px: int,
+    segmentador: Segmentador | None = None,
 ) -> None:
     caminho_zip = Path(caminho_zip)
     destino_extracao_local = Path(destino_extracao_local)
@@ -89,6 +91,7 @@ def main(
         anotacoes_dir=pasta_dedup_anotacoes,
         saida_crops_dir=crops_brutos_dir,
         manifesto_csv=destino_extracao_local / "manifesto_extracao_bruta_seaships.csv",
+        segmentador=segmentador,
     )
     print(f"   {len(extraidos)} crops extraídos (antes do filtro de qualidade).")
 
