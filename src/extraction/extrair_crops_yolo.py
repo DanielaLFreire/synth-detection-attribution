@@ -7,11 +7,16 @@ Este módulo faz a extração em si: lê a anotação (classe cx cy w h
 normalizados) e recorta a região da bounding box da imagem original,
 salvando cada caixa como um arquivo de crop individual.
 
-Modo de extração: recorte retangular simples (não segmentação SAM) -- ver
-nota de escopo em docs/CHANGELOG_metodologico.md. Suficiente para o SMD
-nesta etapa; um modo SAM pode ser adicionado depois sem mudar a interface
-pública, se o grupo decidir que a qualidade de borda do recorte retangular
-não é suficiente.
+Modo de extração: recorte retangular por padrão, OU segmentação (via
+parâmetro `segmentador`, ver src/segmentation/) -- decisão registrada em
+docs/CHANGELOG_metodologico.md (2026-09-01): recorte retangular puro corre
+risco de "shortcut learning" (Geirhos et al., 2020) via borda de colagem
+visível, então a segmentação passa a ser o modo recomendado quando
+disponível. Quando `segmentador` é fornecido, a segmentação roda SEMPRE
+sobre a imagem original (nunca sobre um crop já recortado) -- ver docstring
+de src/segmentation/sam_segment.py para a justificativa. Nesse modo, a
+saída é sempre .png (precisa de canal alpha), independente de
+`extensao_imagem`.
 
 Achado que motiva o campo `video_id` no manifesto: as imagens do SMD são
 frames extraídos de vídeo (36 vídeos distintos, ~11-35 frames cada) --
@@ -31,9 +36,12 @@ from dataclasses import dataclass, fields, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
-EXTRACAO_YOLO_MANIFEST_VERSION = "1.0"
+from src.segmentation import Segmentador, aplicar_mascara_e_recortar
+
+EXTRACAO_YOLO_MANIFEST_VERSION = "1.1"  # bump: campo cobertura_mascara adicionado
 
 # Padrão de nome de arquivo do SMD: "MVI_1486_VIS_frame540_jpg.rf.<hash>.jpg"
 # ou variantes com "_Haze" / "_NIR". Generalizado o suficiente para outras
@@ -55,6 +63,7 @@ class LinhaExtracaoYolo:
     extraido: bool
     motivo: str
     caminho_crop: str  # "" quando extraido=False
+    cobertura_mascara: str = ""  # "" quando modo retangular (sem segmentador)
 
 
 _FIELDNAMES = [f.name for f in fields(LinhaExtracaoYolo)]
@@ -88,6 +97,7 @@ def extrair_crops_de_yolo(
     saida_crops_dir: Path,
     manifesto_csv: Path,
     extensao_imagem: str = ".jpg",
+    segmentador: Segmentador | None = None,
 ) -> list[tuple[str, Path]]:
     """Extrai um arquivo de crop por bounding box, a partir de anotação
     YOLO. Caixas degeneradas (largura ou altura <= 0 pixels após conversão)
@@ -96,6 +106,11 @@ def extrair_crops_de_yolo(
     labels_final, que é estrita por lidar com o dataset-alvo; aqui lidamos
     com uma fonte de crops, onde uma caixa ruim isolada não compromete o
     experimento, só reduz o pool em uma unidade).
+
+    `segmentador`: se fornecido (ex.: SegmentadorSAM), cada caixa é
+    segmentada sobre a IMAGEM ORIGINAL antes do recorte -- produz crops
+    RGBA com fundo isolado, salvos sempre como .png. Se None (padrão),
+    comportamento antigo: recorte retangular direto.
 
     Retorna a lista de crops extraídos no formato (fonte, caminho) --
     ainda precisa passar pelo filtro de qualidade unificado (-1.3) antes de
@@ -107,6 +122,8 @@ def extrair_crops_de_yolo(
     saida_crops_dir.mkdir(parents=True, exist_ok=True)
     manifesto_csv = Path(manifesto_csv)
     manifesto_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    ext_saida = ".png" if segmentador is not None else extensao_imagem
 
     run_id = datetime.now(timezone.utc).strftime("extracao_yolo_%Y%m%dT%H%M%SZ")
     extraidos: list[tuple[str, Path]] = []
@@ -136,6 +153,7 @@ def extrair_crops_de_yolo(
             with Image.open(caminho_imagem) as img:
                 largura_img, altura_img = img.size
                 boxes = _ler_boxes_yolo(caminho_label)
+                img_np = np.array(img.convert("RGB")) if segmentador is not None else None
 
                 for i, (classe, cx, cy, w, h) in enumerate(boxes):
                     bw_px = w * largura_img
@@ -157,9 +175,17 @@ def extrair_crops_de_yolo(
                         )))
                         continue
 
-                    crop = img.crop((x0, y0, x1, y1))
-                    caminho_crop = saida_crops_dir / f"{stem}_box{i:03d}{extensao_imagem}"
-                    crop.save(caminho_crop)
+                    caminho_crop = saida_crops_dir / f"{stem}_box{i:03d}{ext_saida}"
+                    cobertura_str = ""
+
+                    if segmentador is not None:
+                        mascara = segmentador.segmentar(img_np, (x0, y0, x1, y1))
+                        resultado = aplicar_mascara_e_recortar(img_np, (x0, y0, x1, y1), mascara)
+                        resultado.crop_rgba.save(caminho_crop)
+                        cobertura_str = f"{resultado.cobertura_mascara:.4f}"
+                    else:
+                        crop = img.crop((x0, y0, x1, y1))
+                        crop.save(caminho_crop)
 
                     writer.writerow(asdict(LinhaExtracaoYolo(
                         manifest_version=EXTRACAO_YOLO_MANIFEST_VERSION,
@@ -167,7 +193,9 @@ def extrair_crops_de_yolo(
                         fonte=fonte, imagem_origem=str(caminho_imagem), box_index=i,
                         video_id=video_id, largura_px=x1 - x0, altura_px=y1 - y0,
                         extraido=True, motivo="ok", caminho_crop=str(caminho_crop),
+                        cobertura_mascara=cobertura_str,
                     )))
                     extraidos.append((fonte, caminho_crop))
 
     return extraidos
+

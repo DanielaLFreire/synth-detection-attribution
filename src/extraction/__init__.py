@@ -4,7 +4,11 @@ from .dedup_roboflow import (
     ResultadoDeduplicacao,
 )
 from .quality_filter import FiltroConfig, avaliar_crop, ResultadoAvaliacao
-from .quality_manifest import filtrar_pool_de_crops, LinhaManifestoExtracao
+from .quality_manifest import (
+    filtrar_pool_de_crops,
+    carregar_coberturas_do_manifesto_extracao,
+    LinhaManifestoExtracao,
+)
 from .extrair_crops_yolo import (
     extrair_crops_de_yolo,
     identificar_video_id,
@@ -25,6 +29,7 @@ __all__ = [
     "avaliar_crop",
     "ResultadoAvaliacao",
     "filtrar_pool_de_crops",
+    "carregar_coberturas_do_manifesto_extracao",
     "LinhaManifestoExtracao",
     "extrair_crops_de_yolo",
     "identificar_video_id",

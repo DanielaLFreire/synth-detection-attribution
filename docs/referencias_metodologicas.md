@@ -85,6 +85,22 @@ nova decisão for justificada por literatura.
   contexto ao redor já produz ganho robusto — justifica a escolha de não
   exigir realismo de contexto na composição in-place deste projeto,
   consistente com a decisão de herdar posições de caixas reais (§5.1).
+  Também informa a decisão de que, uma vez isolado o objeto do fundo
+  (máscara), técnicas adicionais de blending na borda não são necessárias.
+
+- **Geirhos, R., Jacobsen, J.-H., Michaelis, C., Zemel, R., Brendel, W.,
+  Bethge, M., Wichmann, F.A. (2020).** "Shortcut Learning in Deep Neural
+  Networks." *Nature Machine Intelligence*, 2(11):665–673.
+  Uso neste projeto: fundamenta o risco de que bordas visíveis de colagem
+  (recorte retangular com fundo original) sejam aprendidas pelo detector
+  como pista trivial de "objeto colado", em vez da aparência real do
+  objeto — motiva a adoção de segmentação (SAM) para isolar o objeto do
+  fundo antes da colagem (`src/segmentation/`).
+
+- **Kirillov, A. et al. (2023).** "Segment Anything." *ICCV 2023*.
+  Uso neste projeto: modelo de segmentação com prompt de caixa
+  (`SegmentadorSAM`) usado para isolar o objeto do fundo em cada crop
+  antes da composição, mitigando o risco de shortcut learning acima.
 
 ### Linhagem intelectual do projeto (não é este projeto, mas é o trabalho do qual ele herda perguntas e lições)
 

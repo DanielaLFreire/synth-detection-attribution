@@ -10,6 +10,19 @@ from PIL import Image
 from src.extraction import extrair_crops_de_yolo, identificar_video_id
 
 
+class _SegmentadorFalsoParaTeste:
+    """Marca metade esquerda de cada caixa como objeto -- suficiente para
+    confirmar que o extrator está de fato chamando o segmentador e usando
+    o resultado dele, sem precisar do SAM real."""
+    def segmentar(self, imagem_rgb, caixa):
+        import numpy as np
+        mascara = np.zeros(imagem_rgb.shape[:2], dtype=bool)
+        x0, y0, x1, y1 = caixa
+        meio = x0 + (x1 - x0) // 2
+        mascara[y0:y1, x0:meio] = True
+        return mascara
+
+
 def test_identificar_video_id_com_nomes_reais_do_smd():
     # nomes exatamente como vistos no smd_clean.zip real
     assert identificar_video_id("MVI_1486_VIS_frame540_jpg.rf.6b86ad6.txt") == "MVI_1486_VIS"
@@ -111,3 +124,60 @@ def test_label_sem_imagem_correspondente_e_registrado_nao_interrompe(tmp_path):
         linhas = list(csv.DictReader(f))
     orfao = next(l for l in linhas if "img_orfao" in l["imagem_origem"])
     assert orfao["motivo"] == "imagem_nao_encontrada"
+
+
+def test_com_segmentador_saida_e_sempre_png_com_alpha(tmp_path):
+    imagens_dir, labels_dir = _criar_fonte_yolo_sintetica(tmp_path, {
+        "img_teste": [(0.5, 0.5, 0.4, 0.4)],
+    })
+
+    extraidos = extrair_crops_de_yolo(
+        fonte="SMD", imagens_dir=imagens_dir, labels_dir=labels_dir,
+        saida_crops_dir=tmp_path / "crops_segmentados",
+        manifesto_csv=tmp_path / "manifesto_seg.csv",
+        extensao_imagem=".jpg",  # pedido .jpg, mas com segmentador deve sair .png
+        segmentador=_SegmentadorFalsoParaTeste(),
+    )
+
+    assert len(extraidos) == 1
+    _, caminho_crop = extraidos[0]
+    assert caminho_crop.suffix == ".png"
+    with Image.open(caminho_crop) as img_salva:
+        assert img_salva.mode == "RGBA"
+
+
+def test_com_segmentador_manifesto_registra_cobertura_mascara(tmp_path):
+    imagens_dir, labels_dir = _criar_fonte_yolo_sintetica(tmp_path, {
+        "img_teste": [(0.5, 0.5, 0.4, 0.4)],
+    })
+    manifesto_csv = tmp_path / "manifesto_seg.csv"
+
+    extrair_crops_de_yolo(
+        fonte="SMD", imagens_dir=imagens_dir, labels_dir=labels_dir,
+        saida_crops_dir=tmp_path / "crops_segmentados",
+        manifesto_csv=manifesto_csv,
+        segmentador=_SegmentadorFalsoParaTeste(),
+    )
+
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        linhas = list(csv.DictReader(f))
+    # segmentador falso marca metade da caixa -- cobertura deve ser ~0.5
+    assert abs(float(linhas[0]["cobertura_mascara"]) - 0.5) < 0.05
+
+
+def test_sem_segmentador_cobertura_mascara_fica_vazia(tmp_path):
+    """Confirma que o modo antigo (retangular, sem segmentador) continua
+    preenchendo o novo campo como vazio, não quebrando a leitura do CSV."""
+    imagens_dir, labels_dir = _criar_fonte_yolo_sintetica(tmp_path, {
+        "img_teste": [(0.5, 0.5, 0.2, 0.2)],
+    })
+    manifesto_csv = tmp_path / "manifesto.csv"
+
+    extrair_crops_de_yolo(
+        fonte="SMD", imagens_dir=imagens_dir, labels_dir=labels_dir,
+        saida_crops_dir=tmp_path / "crops", manifesto_csv=manifesto_csv,
+    )
+
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        linhas = list(csv.DictReader(f))
+    assert linhas[0]["cobertura_mascara"] == ""

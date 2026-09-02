@@ -514,3 +514,55 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   normalizada, aspect ratio, posição, e objetos por imagem, por split e
   consolidado — pronto para servir de referência às features relacionais
   do Estágio A quando chegarmos lá.
+
+## 2026-09-01 — Módulo de segmentação SAM (mitigação de shortcut learning)
+
+- **Motivação**: recorte retangular direto (usado até agora nas quatro
+  fontes) carrega fundo original ao redor do objeto, criando uma borda
+  visível de descontinuidade contra a cena de destino na composição. Risco
+  identificado: o detector pode aprender a reconhecer a borda em si como
+  pista de "objeto colado", em vez da aparência real do objeto —
+  fenômeno descrito por Geirhos, R. et al. (2020), "Shortcut Learning in
+  Deep Neural Networks", *Nature Machine Intelligence*, 2(11):665-673.
+  Como o tom de fundo residual varia sistematicamente por fonte (água do
+  SMD, céu do ABOShips, doca do SeaShips), esse risco poderia reintroduzir
+  um confound "fonte" por uma via diferente da já resolvida (filtro
+  inconsistente ABO vs. InaTech).
+- **Decisão de design**: a segmentação roda SEMPRE sobre a imagem
+  original, nunca sobre um crop já recortado — o SAM precisa de contexto
+  de fundo ao redor da caixa para traçar a fronteira com precisão, e rodar
+  sobre um crop minúsculo já recortado forçaria upsampling que borra a
+  imagem antes da segmentação.
+- **Entregue**: `src/segmentation/sam_segment.py` — interface `Segmentador`
+  (qualquer objeto com `.segmentar(imagem, caixa) -> máscara`) permite
+  testar toda a lógica de aplicação de máscara/recorte/cálculo de
+  cobertura com um segmentador falso, sem GPU nem pesos do SAM.
+  `SegmentadorSAM` real (Kirillov et al., 2023, "Segment Anything", ICCV)
+  usa prompt de caixa, com import tardio de `segment_anything`/`torch`
+  (não testável neste ambiente sem GPU, mas isolado o suficiente para não
+  afetar a testabilidade do resto). `aplicar_mascara_e_recortar` produz um
+  crop RGBA com fundo transparente fora da máscara, calculando
+  `cobertura_mascara` (fração da caixa coberta) — alimenta diretamente
+  `FiltroConfig.min_cobertura_mascara`, já existente desde -1.3 mas nunca
+  antes populado com dado real.
+- **Extrator YOLO atualizado** (`extrair_crops_de_yolo`, usado por SMD e
+  UA-DETRAC): parâmetro opcional `segmentador` (default `None`, preserva
+  comportamento retangular antigo sem quebrar nada já testado). Quando
+  fornecido, saída é sempre `.png` (precisa de canal alpha) e o manifesto
+  ganha o campo `cobertura_mascara` (manifest_version bump 1.0→1.1).
+  Extratores VOC (SeaShips) e CSV (ABOShips) ainda **não** receberam a
+  mesma atualização — pendência explícita, mesmo padrão a replicar.
+- **Nova função de integração**: `carregar_coberturas_do_manifesto_extracao`
+  lê o manifesto de extração e monta o dicionário de coberturas que
+  `filtrar_pool_de_crops` (-1.3) consome — testado de ponta a ponta
+  (extração com segmentador falso → filtro rejeitando por cobertura real
+  abaixo do limiar exigido).
+- Coberto por `tests/test_sam_segment.py` (4 testes), 3 testes novos em
+  `tests/test_extrair_crops_yolo.py`, e 1 teste de integração em
+  `tests/test_extraction.py`. Suíte completa: 63/63.
+- **Pendências explícitas**: (1) replicar a mesma integração de
+  segmentador nos extratores VOC e CSV do ABOShips/SeaShips; (2) rodar
+  `SegmentadorSAM` de verdade no Colab (checkpoint SAM ViT-B, GPU) contra
+  os ~143 mil crops já extraídos em modo retangular — reprocessamento
+  necessário, os crops retangulares já gerados não são reaproveitáveis
+  neste novo modo.

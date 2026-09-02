@@ -54,6 +54,32 @@ def _sha256_arquivo(caminho: Path) -> str:
     return h.hexdigest()
 
 
+def carregar_coberturas_do_manifesto_extracao(caminho_manifesto_extracao: Path) -> dict[str, float]:
+    """Lê um manifesto de extração (de extrair_crops_de_yolo/_voc/_csv_abo)
+    e monta o dicionário {nome_do_arquivo_de_crop: cobertura_mascara} para
+    alimentar filtrar_pool_de_crops(coberturas_mascara=...).
+
+    Só inclui linhas com extraido=True e cobertura_mascara preenchida (não
+    vazia) -- crops extraídos em modo retangular (sem segmentador) não têm
+    essa informação, e o filtro trata a ausência corretamente (ver
+    FiltroConfig.exigir_mascara em quality_filter.py).
+    """
+    coberturas: dict[str, float] = {}
+    with open(caminho_manifesto_extracao, newline="", encoding="utf-8") as f:
+        for linha in csv.DictReader(f):
+            if linha.get("extraido") != "True":
+                continue
+            cobertura_str = linha.get("cobertura_mascara", "")
+            if not cobertura_str:
+                continue
+            caminho_crop = linha.get("caminho_crop", "")
+            if not caminho_crop:
+                continue
+            nome_arquivo = Path(caminho_crop).name
+            coberturas[nome_arquivo] = float(cobertura_str)
+    return coberturas
+
+
 def filtrar_pool_de_crops(
     *,
     fonte: str,

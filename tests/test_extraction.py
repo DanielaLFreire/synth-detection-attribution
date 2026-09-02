@@ -196,3 +196,50 @@ def test_filtrar_pool_de_crops_duas_fontes_mesma_config_manifesto_acumulado(tmp_
     import json
     historico = json.loads(meta.read_text(encoding="utf-8"))
     assert len(historico) == 2  # uma entrada de metadata por fonte processada
+
+
+def test_ponte_extracao_para_filtro_usa_cobertura_real_do_segmentador(tmp_path):
+    """Teste de integração -1.6 -> -1.3: extrai com um segmentador falso,
+    carrega a cobertura do manifesto de extração, e confirma que o filtro
+    de qualidade usa essa cobertura real (não None) para decidir."""
+    from src.extraction import extrair_crops_de_yolo, carregar_coberturas_do_manifesto_extracao
+
+    class _SegmentadorMetade:
+        def segmentar(self, imagem_rgb, caixa):
+            import numpy as np
+            mascara = np.zeros(imagem_rgb.shape[:2], dtype=bool)
+            x0, y0, x1, y1 = caixa
+            meio = x0 + (x1 - x0) // 2
+            mascara[y0:y1, x0:meio] = True
+            return mascara
+
+    imagens_dir = tmp_path / "images"
+    labels_dir = tmp_path / "labels"
+    imagens_dir.mkdir()
+    labels_dir.mkdir()
+    Image.new("RGB", (200, 100)).save(imagens_dir / "img1.png")
+    (labels_dir / "img1.txt").write_text("0 0.5 0.5 0.4 0.4\n")
+
+    manifesto_extracao = tmp_path / "manifesto_extracao.csv"
+    extrair_crops_de_yolo(
+        fonte="FonteTeste", imagens_dir=imagens_dir, labels_dir=labels_dir,
+        saida_crops_dir=tmp_path / "crops", manifesto_csv=manifesto_extracao,
+        extensao_imagem=".png",  # imagem de ENTRADA salva como .png acima
+        segmentador=_SegmentadorMetade(),
+    )
+
+    coberturas = carregar_coberturas_do_manifesto_extracao(manifesto_extracao)
+    assert len(coberturas) == 1
+    (cobertura_valor,) = coberturas.values()
+    assert abs(cobertura_valor - 0.5) < 0.05
+
+    # agora usa essa cobertura no filtro, exigindo min_cobertura_mascara=0.9
+    # -- o crop deve ser REJEITADO (cobertura real ~0.5 < 0.9)
+    config = FiltroConfig(min_dim_px=1, min_cobertura_mascara=0.9, exigir_mascara=True)
+    mantidos = filtrar_pool_de_crops(
+        fonte="FonteTeste", crops_dir=tmp_path / "crops", config=config,
+        manifesto_csv=tmp_path / "manifesto_filtro.csv",
+        manifesto_metadata_json=tmp_path / "manifesto_filtro_meta.json",
+        coberturas_mascara=coberturas,
+    )
+    assert len(mantidos) == 0

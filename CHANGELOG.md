@@ -110,3 +110,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `tests/test_target_profile.py` (5 tests, including a numerical
   reproduction of the letterbox-vs-stretch divergence on an 80×80px box in
   a 1920×1080 image) — all passing. Full suite: 55/55 passing.
+- `src/segmentation/sam_segment.py`: SAM-based (box-prompted) segmentation
+  to isolate objects from background before pasting, mitigating a
+  shortcut-learning risk (Geirhos et al., 2020) where rectangular-crop
+  paste seams could act as a trivial detectability cue correlated with
+  source identity. `Segmentador` protocol enables full testability without
+  GPU/SAM weights via a fake segmentador; `SegmentadorSAM` (real, lazy
+  `segment_anything`/`torch` import) always segments on the ORIGINAL image,
+  never on an already-cropped patch. `extrair_crops_de_yolo` (SMD,
+  UA-DETRAC) updated with an optional `segmentador` parameter (backward
+  compatible, default preserves old rectangular behavior); manifest gains
+  `cobertura_mascara` (bump 1.0→1.1). New `carregar_coberturas_do_manifesto_extracao`
+  bridges extraction output into the existing `filtrar_pool_de_crops`
+  quality filter (-1.3), tested end-to-end. VOC/CSV extractors (SeaShips,
+  ABOShips) NOT yet updated with the same segmentador support — explicit
+  pending item. Covered by `tests/test_sam_segment.py` (4 tests) + 3 new
+  tests in `test_extrair_crops_yolo.py` + 1 integration test in
+  `test_extraction.py`. Full suite: 63/63 passing.
