@@ -216,26 +216,40 @@ class SegmentadorSAM3:
         return cls(processor)
 
     def segmentar(self, imagem_rgb: np.ndarray, caixa: tuple[int, int, int, int]) -> np.ndarray:
+        import torch
         from PIL import Image as _PILImage
 
-        if self._imagem_atual_id != id(imagem_rgb):
-            imagem_pil = _PILImage.fromarray(imagem_rgb)
-            self._estado_atual = self._processor.set_image(imagem_pil)
-            self._imagem_atual_id = id(imagem_rgb)
-        else:
-            # mesma imagem, nova caixa -- limpa o prompt geométrico anterior
-            # (acumulativo por padrão), mantendo o encoding da imagem em cache
-            self._processor.reset_all_prompts(self._estado_atual)
-
         altura_img, largura_img = imagem_rgb.shape[:2]
-        box_normalizada = _caixa_absoluta_para_cxcywh_normalizado(caixa, largura_img, altura_img)
 
-        self._estado_atual = self._processor.add_geometric_prompt(
-            box=box_normalizada, label=True, state=self._estado_atual,
-        )
+        # O SAM 3 exige rodar sob autocast bfloat16 -- confirmado nos seis
+        # notebooks de exemplo oficiais (facebookresearch/sam3/examples/),
+        # todos chamam torch.autocast("cuda", dtype=torch.bfloat16) logo
+        # após carregar o modelo. Sem isso, partes do modelo (backbone
+        # visual) operam em bfloat16 enquanto as ativações de entrada ficam
+        # em float32, causando RuntimeError de dtype incompatível numa
+        # camada Linear interna. Aqui o contexto envolve só as chamadas de
+        # inferência (não fica aberto indefinidamente, diferente do padrão
+        # usado nos notebooks, que é aceitável em notebook mas não numa
+        # biblioteca).
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            if self._imagem_atual_id != id(imagem_rgb):
+                imagem_pil = _PILImage.fromarray(imagem_rgb)
+                self._estado_atual = self._processor.set_image(imagem_pil)
+                self._imagem_atual_id = id(imagem_rgb)
+            else:
+                # mesma imagem, nova caixa -- limpa o prompt geométrico anterior
+                # (acumulativo por padrão), mantendo o encoding da imagem em cache
+                self._processor.reset_all_prompts(self._estado_atual)
 
-        mascaras = self._estado_atual.get("masks")
-        caixas_retornadas = self._estado_atual.get("boxes")
+            box_normalizada = _caixa_absoluta_para_cxcywh_normalizado(caixa, largura_img, altura_img)
+
+            self._estado_atual = self._processor.add_geometric_prompt(
+                box=box_normalizada, label=True, state=self._estado_atual,
+            )
+
+            mascaras = self._estado_atual.get("masks")
+            caixas_retornadas = self._estado_atual.get("boxes")
+
         if mascaras is None or len(mascaras) == 0:
             return np.zeros((altura_img, largura_img), dtype=bool)
 

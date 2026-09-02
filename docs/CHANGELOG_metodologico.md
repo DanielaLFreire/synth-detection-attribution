@@ -720,3 +720,29 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
 - Suíte completa após a mudança de assinatura: 74/74 passando (a mudança
   não afeta nenhum teste existente, já que `bpe_path` é opcional e os
   testes não exercitam o carregamento real, que depende de GPU).
+
+## 2026-09-02 — Segundo bug de terceiro corrigido: SAM 3 exige contexto autocast bfloat16
+
+- **Erro encontrado durante a primeira inferência real**:
+  `RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16
+  and Float`, dentro do backbone visual do modelo (vitdet.py), não em
+  código nosso.
+- **Causa raiz confirmada por inspeção do código-fonte**: partes do SAM 3
+  operam nativamente em bfloat16 (comentário explícito em
+  `sam3/model/sam3_image.py`: features do backbone SAM2 "já estão em
+  bfloat16 por causa de AMP"), mas a imagem de entrada é explicitamente
+  convertida para float32 (`sam3_image.py`, linha ~154). Sem um contexto
+  de precisão mista (`torch.autocast`) envolvendo a chamada, ocorre
+  incompatibilidade de tipo numa camada Linear interna.
+- **Confirmado como uso pretendido, não workaround improvisado**: os seis
+  notebooks de exemplo oficiais (`facebookresearch/sam3/examples/`) todos
+  entram em `torch.autocast("cuda", dtype=torch.bfloat16)` logo após
+  carregar o modelo, antes de qualquer inferência.
+- **Correção aplicada**: `SegmentadorSAM3.segmentar()` agora envolve as
+  chamadas de inferência (`set_image`, `add_geometric_prompt`) num bloco
+  `with torch.autocast("cuda", dtype=torch.bfloat16):` -- mais limpo do
+  que o padrão dos notebooks (que entram no contexto e nunca saem,
+  aceitável em notebook interativo, não numa função de biblioteca
+  reutilizável).
+- Suíte completa: 74/74 (mudança não afeta testes existentes, que não
+  exercitam inferência real).
