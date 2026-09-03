@@ -781,3 +781,17 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   pool de crops de veículo (split train deduplicado). Nenhuma mudança na
   lógica de colapso de classes ou materialização do split valid. Suíte
   completa: 74/74 (sem alteração de comportamento quando segmentador=None).
+
+## 2026-09-02 — UA-DETRAC processado com SAM 3
+
+- **Resultado**: 85.170 crops de veículo extraídos e segmentados com SAM 3
+  a partir do split train deduplicado do UA-DETRAC-DATASET-10K, salvos em
+  `EXPERIMENTO_ATRIBUICAO_CAUSAL/segundo_dominio_uadetrac_sam3/crops_veiculos/`.
+  Fundo de composição (split valid, materializado e verificado) salvo em
+  `.../valid_background/`.
+- **Ainda não verificado**: qualidade da segmentação neste pool (cobertura
+  média/mínima, casos de falha) — a mesma checagem já aplicada ao SMD
+  (amostra aleatória + piores casos por cobertura) ainda não foi rodada
+  aqui. Pendente antes de considerar este pool validado.
+- **Restam**: SeaShips e ABOShips ainda não processados com SAM 3 (só com
+  recorte retangular, na extração inicial da tarefa -1.6).
