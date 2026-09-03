@@ -795,3 +795,26 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   aqui. Pendente antes de considerar este pool validado.
 - **Restam**: SeaShips e ABOShips ainda não processados com SAM 3 (só com
   recorte retangular, na extração inicial da tarefa -1.6).
+
+## 2026-09-02 — Bug corrigido: manifestos do UA-DETRAC não eram copiados para o Drive
+
+- **Achado**: ao tentar inspecionar a qualidade da segmentação do
+  UA-DETRAC, `manifesto_extracao_bruta_ua_detrac.csv` não foi encontrado
+  no armazenamento local do Colab (`/content/ua_detrac_extraido_sam3/`).
+- **Causa raiz**: `scripts/preparar_ua_detrac.py` nunca copiava os três
+  manifestos (extração bruta, filtro de qualidade, metadata do filtro)
+  para o Drive — diferente dos outros três scripts de extração
+  (`extrair_smd.py`, `extrair_seaships.py`, `extrair_aboships.py`), que já
+  faziam isso desde a tarefa -1.6. Como o armazenamento local do Colab
+  (`/content/...`) não sobrevive a reinício/desconexão de sessão, esses
+  manifestos ficaram irrecuperáveis assim que a sessão mudou — só os
+  crops finais e o fundo de composição (copiados ao Drive) sobreviveram.
+- **Correção**: `preparar_ua_detrac.py` agora copia os três manifestos
+  para `destino_drive`, mesmo padrão dos outros três scripts.
+- **Consequência prática**: os manifestos do processamento já concluído
+  (85.170 crops) foram perdidos e não são recuperáveis — só os crops em
+  si e o fundo de composição estão no Drive. Para ter o manifesto (e
+  poder inspecionar cobertura_mascara, motivos de descarte, etc.), é
+  necessário **rodar a extração do UA-DETRAC de novo**, agora com o
+  script corrigido.
+- Suíte completa: 74/74 (mudança não afeta nenhum teste existente).

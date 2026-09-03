@@ -127,7 +127,7 @@ def main(
     print(f"   {len(mantidos)} de {len(extraidos)} crops mantidos após o filtro "
           f"({100 * len(mantidos) / max(1, len(extraidos)):.1f}% de aproveitamento).")
 
-    print(f"\n6) Copiando pool de crops e fundo de composição (valid) para o Drive ({destino_drive})...")
+    print(f"\n6) Copiando pool de crops, fundo de composição (valid) e manifestos para o Drive ({destino_drive})...")
     destino_drive.mkdir(parents=True, exist_ok=True)
     destino_crops = destino_drive / "crops_veiculos"
     destino_crops.mkdir(parents=True, exist_ok=True)
@@ -139,8 +139,20 @@ def main(
     shutil.copytree(destino_extracao_local / "valid" / "labels_final", destino_valid / "labels_final", dirs_exist_ok=True)
     shutil.copy2(destino_extracao_local / "valid" / "labels_final_manifest.json", destino_valid / "labels_final_manifest.json")
 
+    # BUG CORRIGIDO EM 2026-09-02: os três manifestos abaixo não eram
+    # copiados para o Drive, ao contrário dos outros três scripts de
+    # extração (extrair_smd.py, extrair_seaships.py, extrair_aboships.py)
+    # -- ficavam presos em armazenamento local do Colab, que não sobrevive
+    # a reinício/desconexão de sessão. Ver docs/CHANGELOG_metodologico.md.
+    for nome_manifesto in (
+        "manifesto_extracao_bruta_ua_detrac.csv",
+        "manifesto_filtro_qualidade_ua_detrac.csv",
+        "manifesto_filtro_qualidade_ua_detrac_meta.json",
+    ):
+        shutil.copy2(destino_extracao_local / nome_manifesto, destino_drive / nome_manifesto)
+
     print(f"\n✅ Concluído. Pool de {len(mantidos)} crops em {destino_crops}, "
-          f"fundo de composição (valid) em {destino_valid}")
+          f"fundo de composição (valid) em {destino_valid}, manifestos em {destino_drive}")
 
 
 if __name__ == "__main__":
