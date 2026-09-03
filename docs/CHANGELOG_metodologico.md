@@ -772,3 +772,12 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   os pools do SMD (SAM 1 em `crops_sam/`, SAM 3 em `crops_sam3/`)
   permanecem no Drive para eventual comparação futura, mas `crops_sam3/`
   é o candidato a pool oficial deste projeto.
+
+## 2026-09-02 — segmentador adicionado ao script do UA-DETRAC
+
+- `scripts/preparar_ua_detrac.py` atualizado com o mesmo parâmetro opcional
+  `segmentador` já presente nos outros três scripts de extração --
+  repassado à chamada de `extrair_crops_de_yolo` na etapa de extração do
+  pool de crops de veículo (split train deduplicado). Nenhuma mudança na
+  lógica de colapso de classes ou materialização do split valid. Suíte
+  completa: 74/74 (sem alteração de comportamento quando segmentador=None).

@@ -43,6 +43,7 @@ from src.extraction import (
     FiltroConfig,
 )
 from src.materialize import colapsar_para_classe_unica, materializar_labels_final
+from src.segmentation import Segmentador
 
 CLASSES_ORIGINAIS_UA_DETRAC = {"0", "1", "2", "3"}  # bus, car, truck, van (data.yaml verificado)
 
@@ -52,6 +53,7 @@ def main(
     destino_extracao_local: str,
     destino_drive: str,
     min_dim_px: int,
+    segmentador: Segmentador | None = None,
 ) -> None:
     caminho_zip = Path(caminho_zip)
     destino_extracao_local = Path(destino_extracao_local)
@@ -110,6 +112,7 @@ def main(
         saida_crops_dir=crops_brutos_dir,
         manifesto_csv=destino_extracao_local / "manifesto_extracao_bruta_ua_detrac.csv",
         extensao_imagem=".jpg",
+        segmentador=segmentador,
     )
     print(f"   {len(extraidos)} crops extraídos (antes do filtro de qualidade).")
 
