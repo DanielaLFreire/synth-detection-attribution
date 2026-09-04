@@ -818,3 +818,60 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   necessário **rodar a extração do UA-DETRAC de novo**, agora com o
   script corrigido.
 - Suíte completa: 74/74 (mudança não afeta nenhum teste existente).
+
+## 2026-09-02 — Violação da própria convenção de armazenamento (§12.1): crops soltos no Drive causando I/O error
+
+- **Erro observado**: `OSError: [Errno 5] Input/output error` ao tentar
+  checar a existência de um arquivo de crop do UA-DETRAC em
+  `crops_veiculos/` no Drive -- diferente de `FileNotFoundError` (arquivo
+  ausente), este erro indica instabilidade do Google Drive montado via
+  FUSE no Colab.
+- **Causa raiz**: `crops_veiculos/` contém 85.170 arquivos PNG individuais
+  soltos diretamente no Drive, e o total agregado das quatro fontes já
+  passa de 100 mil arquivos soltos (SMD: 7.043; UA-DETRAC: 85.170;
+  SeaShips e ABOShips ainda por processar). Isso **viola diretamente** a
+  convenção já registrada em `docs/README_DRIVE.md` (§12.1 do plano): "um
+  `.zip` por artefato pesado, não pastas soltas com muitos arquivos
+  pequenos -- evita escrita arquivo-a-arquivo lenta e vulnerável a queda
+  quando o Drive é montado via FUSE" -- lição herdada do projeto anterior,
+  mas não aplicada na prática pelos scripts de extração deste projeto.
+- **Mitigação imediata**: `drive.mount(force_remount=True)` -- erros de
+  I/O do FUSE costumam ser transitórios e um remontagem resolve na maioria
+  dos casos.
+- **Correção estrutural pendente**: os scripts de extração
+  (`extrair_smd.py`, `extrair_seaships.py`, `extrair_aboships.py`,
+  `preparar_ua_detrac.py`) devem compactar a pasta de crops final num
+  único `.zip` antes de finalizar, em vez de deixar os arquivos soltos no
+  Drive -- aplicar retroativamente aos pools já gerados (SMD, UA-DETRAC) e
+  corrigir os scripts para as próximas execuções (SeaShips, ABOShips).
+  Ainda não implementado.
+
+## 2026-09-02 — Investigação dos piores casos do UA-DETRAC: dois mecanismos de falha distintos
+
+- **Cobertura no pool completo (85.170 crops)**: média 0,694, mínima
+  0,000, 289 casos (0,34%) abaixo de 0,15 -- taxa maior que o SMD (0,07%),
+  mas ainda pequena em termos absolutos.
+- **Inspeção visual dos 6 piores casos (lendo direto do zip fonte, já que
+  os arquivos locais da sessão de extração não sobreviveram)** revelou
+  DOIS mecanismos de falha distintos, diferente do SMD (que tinha só um):
+  1. **Objeto genuinamente minúsculo e isolado** (10×10px, avenida vazia)
+     -- mesmo padrão benigno já visto no SMD.
+  2. **Oclusão por densidade de cena**: a maioria dos piores casos (4 de
+     6) vem de cenas de trânsito muito denso (interseção cheia, fila de
+     carros colados), com caixas pequenas posicionadas onde veículos
+     vizinhos se tocam -- ambiguidade de fronteira entre objetos, não
+     apenas tamanho pequeno. Este mecanismo não existe do mesmo jeito no
+     domínio marítimo (SMD).
+  3. **Possível problema de qualidade de anotação**: um caso (104×94px,
+     ônibus) tinha cobertura zero apesar de NÃO ser pequeno -- a caixa
+     cobria apenas o teto/parte superior do veículo, não a silhueta
+     completa. Levantado como suspeita, não confirmado sistematicamente
+     (checagem pontual, não uma varredura completa do pool).
+- **Achado metodológico relevante para a Fase 2.5**: a estrutura de
+  dificuldade de segmentação difere entre os dois domínios de validação
+  (SMD: objeto pequeno isolado; UA-DETRAC: objeto pequeno + oclusão por
+  densidade) -- registrado como observação útil para a discussão de
+  generalização do artigo, não como decisão a tomar agora.
+- **Decisão**: pool do UA-DETRAC (SAM 3) aceito como está — taxa de falha
+  baixa (0,34%) e explicável por mecanismos identificáveis, não uma falha
+  sistemática do segmentador.
