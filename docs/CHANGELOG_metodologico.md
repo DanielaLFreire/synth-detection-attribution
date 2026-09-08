@@ -875,3 +875,33 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
 - **Decisão**: pool do UA-DETRAC (SAM 3) aceito como está — taxa de falha
   baixa (0,34%) e explicável por mecanismos identificáveis, não uma falha
   sistemática do segmentador.
+
+## 2026-09-02 — Correção estrutural: pools de crops compactados em .zip, não mais arquivos soltos no Drive
+
+- **Entregue**: `src/extraction/archive_utils.py` -- `compactar_arquivos()`
+  compacta uma lista específica de arquivos (só os crops MANTIDOS após o
+  filtro de qualidade, não a pasta bruta inteira) num único `.zip`;
+  `carregar_pool_de_crops_do_zip()` extrai de volta para uma pasta local e
+  devolve a lista no formato `list[(fonte, caminho)]` que
+  `src.compose.compor_dataset` já espera -- **nenhuma mudança** foi feita
+  no componente de composição em si, conforme decidido.
+- **Os quatro scripts de extração atualizados** (`extrair_smd.py`,
+  `extrair_seaships.py`, `extrair_aboships.py`, `preparar_ua_detrac.py`):
+  a etapa final agora compacta localmente e copia um ÚNICO arquivo `.zip`
+  para o Drive, em vez de copiar milhares de arquivos individuais --
+  correção pela raiz do problema de I/O (`OSError: Input/output error`)
+  encontrado ao inspecionar o UA-DETRAC: a própria operação de copiar
+  muitos arquivos pequenos ao Drive via FUSE é o que causa a instabilidade,
+  não só o armazenamento posterior. Consistente com a convenção já
+  registrada em `docs/README_DRIVE.md` (§12.1 do plano).
+- **`valid_background` do UA-DETRAC permanece como pastas soltas**
+  (decisão deliberada, não descuido): tem 500 imagens, ordem de grandeza
+  bem menor que os pools de crops (7 mil a 85 mil), risco de I/O muito
+  menor nessa escala -- não foi convertido para zip.
+- **Ação necessária**: os pools já gerados e salvos como pastas soltas
+  (`crops_sam3/smd/`, `segundo_dominio_uadetrac_sam3/crops_veiculos/`)
+  precisam ser reprocessados com os scripts corrigidos, ou compactados
+  manualmente, para eliminar o risco de I/O que já se manifestou uma vez.
+- Coberto por `tests/test_archive_utils.py` (4 testes, incluindo o ciclo
+  completo compactar→extrair→formato do pool, e combinação de múltiplas
+  fontes num pool único). Suíte completa: 78/78 passando.

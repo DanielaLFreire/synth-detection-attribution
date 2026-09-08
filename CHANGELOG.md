@@ -155,3 +155,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   itself were needed — `build_sam3_image_model` already exposes this
   parameter. Full suite: 74/74 passing (unaffected, since real loading
   requires GPU and isn't exercised by tests).
+- `src/extraction/archive_utils.py`: fixes a structural storage issue
+  (`OSError: Input/output error` observed when inspecting the UA-DETRAC
+  pool — root cause was copying tens of thousands of individual files to
+  Google Drive over FUSE, not just later access to loose files).
+  `compactar_arquivos()` zips a specific list of kept files (post quality
+  filter, not the whole raw crops folder) locally; `carregar_pool_de_crops_do_zip()`
+  extracts back to a local folder and returns the exact `list[(fonte, caminho)]`
+  format `src.compose.compor_dataset` already expects — no changes to the
+  compose component itself. All four extraction scripts
+  (`extrair_smd.py`, `extrair_seaships.py`, `extrair_aboships.py`,
+  `preparar_ua_detrac.py`) updated to zip locally and copy a single `.zip`
+  to Drive instead of copying loose files, consistent with the storage
+  convention already documented in `docs/README_DRIVE.md` (§12.1).
+  UA-DETRAC's `valid_background` (500 images, composition background, not
+  a crop pool) deliberately left as loose files — much smaller scale, far
+  lower I/O risk. Covered by `tests/test_archive_utils.py` (4 tests,
+  including a full zip→extract→pool-format round trip and multi-source
+  pool combination). Full suite: 78/78 passing. Pending: already-generated
+  pools stored as loose files (SMD, UA-DETRAC via SAM 3) need
+  reprocessing or manual zipping to eliminate the I/O risk that already
+  manifested once.

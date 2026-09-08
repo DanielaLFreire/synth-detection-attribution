@@ -21,6 +21,8 @@ from .extrair_crops_csv_abo import (
     NomeBaseAmbiguo,
 )
 
+from .archive_utils import compactar_arquivos, carregar_pool_de_crops_do_zip
+
 __all__ = [
     "deduplicar_por_base",
     "identificar_base_roboflow",
@@ -39,4 +41,6 @@ __all__ = [
     "extrair_crops_de_csv_abo",
     "LinhaExtracaoCsvAbo",
     "NomeBaseAmbiguo",
+    "compactar_arquivos",
+    "carregar_pool_de_crops_do_zip",
 ]

@@ -41,6 +41,7 @@ from src.extraction import (
     extrair_crops_de_yolo,
     filtrar_pool_de_crops,
     FiltroConfig,
+    compactar_arquivos,
 )
 from src.materialize import colapsar_para_classe_unica, materializar_labels_final
 from src.segmentation import Segmentador
@@ -127,23 +128,20 @@ def main(
     print(f"   {len(mantidos)} de {len(extraidos)} crops mantidos após o filtro "
           f"({100 * len(mantidos) / max(1, len(extraidos)):.1f}% de aproveitamento).")
 
-    print(f"\n6) Copiando pool de crops, fundo de composição (valid) e manifestos para o Drive ({destino_drive})...")
+    print(f"\n6) Compactando pool de crops, copiando fundo de composição (valid) e manifestos para o Drive ({destino_drive})...")
     destino_drive.mkdir(parents=True, exist_ok=True)
-    destino_crops = destino_drive / "crops_veiculos"
-    destino_crops.mkdir(parents=True, exist_ok=True)
-    for _, caminho_crop in mantidos:
-        shutil.copy2(caminho_crop, destino_crops / caminho_crop.name)
+    caminho_zip_local = destino_extracao_local / "crops_veiculos.zip"
+    compactar_arquivos([caminho for _, caminho in mantidos], caminho_zip_local)
+    shutil.copy2(caminho_zip_local, destino_drive / "crops_veiculos.zip")
 
+    # valid_background NÃO é compactado -- volume bem menor (500 imagens,
+    # não dezenas de milhares) e é o fundo de composição, não um pool de
+    # crops; risco de I/O muito menor nesta escala.
     destino_valid = destino_drive / "valid_background"
     shutil.copytree(destino_extracao_local / "valid" / "images", destino_valid / "images", dirs_exist_ok=True)
     shutil.copytree(destino_extracao_local / "valid" / "labels_final", destino_valid / "labels_final", dirs_exist_ok=True)
     shutil.copy2(destino_extracao_local / "valid" / "labels_final_manifest.json", destino_valid / "labels_final_manifest.json")
 
-    # BUG CORRIGIDO EM 2026-09-02: os três manifestos abaixo não eram
-    # copiados para o Drive, ao contrário dos outros três scripts de
-    # extração (extrair_smd.py, extrair_seaships.py, extrair_aboships.py)
-    # -- ficavam presos em armazenamento local do Colab, que não sobrevive
-    # a reinício/desconexão de sessão. Ver docs/CHANGELOG_metodologico.md.
     for nome_manifesto in (
         "manifesto_extracao_bruta_ua_detrac.csv",
         "manifesto_filtro_qualidade_ua_detrac.csv",
@@ -151,8 +149,9 @@ def main(
     ):
         shutil.copy2(destino_extracao_local / nome_manifesto, destino_drive / nome_manifesto)
 
-    print(f"\n✅ Concluído. Pool de {len(mantidos)} crops em {destino_crops}, "
-          f"fundo de composição (valid) em {destino_valid}, manifestos em {destino_drive}")
+    print(f"\n✅ Concluído. Pool de {len(mantidos)} crops compactados em "
+          f"{destino_drive / 'crops_veiculos.zip'}, fundo de composição (valid) em {destino_valid}, "
+          f"manifestos em {destino_drive}")
 
 
 if __name__ == "__main__":

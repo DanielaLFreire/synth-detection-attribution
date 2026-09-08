@@ -23,7 +23,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from src.extraction import extrair_crops_de_csv_abo, filtrar_pool_de_crops, FiltroConfig
+from src.extraction import extrair_crops_de_csv_abo, filtrar_pool_de_crops, FiltroConfig, compactar_arquivos
 from src.segmentation import Segmentador
 
 
@@ -75,12 +75,11 @@ def main(
     print(f"   {len(mantidos)} de {len(extraidos)} crops mantidos após o filtro "
           f"({100 * len(mantidos) / max(1, len(extraidos)):.1f}% de aproveitamento).")
 
-    print(f"4) Copiando crops mantidos e manifestos para o Drive ({destino_crops_drive})...")
+    print(f"4) Compactando {len(mantidos)} crops mantidos e copiando para o Drive ({destino_crops_drive})...")
     destino_crops_drive.mkdir(parents=True, exist_ok=True)
-    destino_aboships_dir = destino_crops_drive / "aboships"
-    destino_aboships_dir.mkdir(parents=True, exist_ok=True)
-    for _, caminho_crop in mantidos:
-        shutil.copy2(caminho_crop, destino_aboships_dir / caminho_crop.name)
+    caminho_zip_local = destino_extracao_local / "aboships.zip"
+    compactar_arquivos([caminho for _, caminho in mantidos], caminho_zip_local)
+    shutil.copy2(caminho_zip_local, destino_crops_drive / "aboships.zip")
 
     for nome_manifesto in (
         "manifesto_extracao_bruta_aboships.csv",
@@ -89,7 +88,8 @@ def main(
     ):
         shutil.copy2(destino_extracao_local / nome_manifesto, destino_crops_drive / nome_manifesto)
 
-    print(f"\n✅ Concluído. {len(mantidos)} crops do ABOShips prontos em {destino_aboships_dir}")
+    print(f"\n✅ Concluído. {len(mantidos)} crops do ABOShips compactados em "
+          f"{destino_crops_drive / 'aboships.zip'}")
 
 
 if __name__ == "__main__":

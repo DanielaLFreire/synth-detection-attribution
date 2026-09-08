@@ -28,7 +28,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from src.extraction import extrair_crops_de_yolo, filtrar_pool_de_crops, FiltroConfig
+from src.extraction import extrair_crops_de_yolo, filtrar_pool_de_crops, FiltroConfig, compactar_arquivos
 from src.segmentation import Segmentador
 
 
@@ -81,12 +81,11 @@ def main(
     print(f"   {len(mantidos)} de {len(extraidos)} crops mantidos após o filtro "
           f"({100 * len(mantidos) / max(1, len(extraidos)):.1f}% de aproveitamento).")
 
-    print(f"4) Copiando crops mantidos e manifestos para o Drive ({destino_crops_drive})...")
+    print(f"4) Compactando {len(mantidos)} crops mantidos e copiando para o Drive ({destino_crops_drive})...")
     destino_crops_drive.mkdir(parents=True, exist_ok=True)
-    destino_smd_dir = destino_crops_drive / "smd"
-    destino_smd_dir.mkdir(parents=True, exist_ok=True)
-    for _, caminho_crop in mantidos:
-        shutil.copy2(caminho_crop, destino_smd_dir / caminho_crop.name)
+    caminho_zip_local = destino_extracao_local / "smd.zip"
+    compactar_arquivos([caminho for _, caminho in mantidos], caminho_zip_local)
+    shutil.copy2(caminho_zip_local, destino_crops_drive / "smd.zip")
 
     for nome_manifesto in (
         "manifesto_extracao_bruta_smd.csv",
@@ -95,8 +94,9 @@ def main(
     ):
         shutil.copy2(destino_extracao_local / nome_manifesto, destino_crops_drive / nome_manifesto)
 
-    print(f"\n✅ Concluído. {len(mantidos)} crops do SMD prontos em {destino_smd_dir}")
-    print("   Manifestos copiados para o Drive junto com os crops -- auditoria preservada.")
+    print(f"\n✅ Concluído. {len(mantidos)} crops do SMD compactados em "
+          f"{destino_crops_drive / 'smd.zip'}")
+    print("   Manifestos copiados para o Drive junto com o zip -- auditoria preservada.")
 
 
 if __name__ == "__main__":

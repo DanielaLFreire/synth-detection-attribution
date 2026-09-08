@@ -29,6 +29,7 @@ from src.extraction import (
     extrair_crops_de_voc,
     filtrar_pool_de_crops,
     FiltroConfig,
+    compactar_arquivos,
 )
 from src.segmentation import Segmentador
 
@@ -107,12 +108,11 @@ def main(
     print(f"   {len(mantidos)} de {len(extraidos)} crops mantidos após o filtro "
           f"({100 * len(mantidos) / max(1, len(extraidos)):.1f}% de aproveitamento).")
 
-    print(f"5) Copiando crops mantidos e manifestos para o Drive ({destino_crops_drive})...")
+    print(f"5) Compactando {len(mantidos)} crops mantidos e copiando para o Drive ({destino_crops_drive})...")
     destino_crops_drive.mkdir(parents=True, exist_ok=True)
-    destino_seaships_dir = destino_crops_drive / "seaships"
-    destino_seaships_dir.mkdir(parents=True, exist_ok=True)
-    for _, caminho_crop in mantidos:
-        shutil.copy2(caminho_crop, destino_seaships_dir / caminho_crop.name)
+    caminho_zip_local = destino_extracao_local / "seaships.zip"
+    compactar_arquivos([caminho for _, caminho in mantidos], caminho_zip_local)
+    shutil.copy2(caminho_zip_local, destino_crops_drive / "seaships.zip")
 
     for nome_manifesto in (
         "manifesto_extracao_bruta_seaships.csv",
@@ -121,7 +121,8 @@ def main(
     ):
         shutil.copy2(destino_extracao_local / nome_manifesto, destino_crops_drive / nome_manifesto)
 
-    print(f"\n✅ Concluído. {len(mantidos)} crops do SeaShips prontos em {destino_seaships_dir}")
+    print(f"\n✅ Concluído. {len(mantidos)} crops do SeaShips compactados em "
+          f"{destino_crops_drive / 'seaships.zip'}")
 
 
 if __name__ == "__main__":
