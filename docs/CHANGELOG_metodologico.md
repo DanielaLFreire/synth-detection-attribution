@@ -1011,3 +1011,64 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `scripts/perfilar_fontes.py` para gerar a tabela real e decidir
   `min_dim_px` com base nela -- ainda não fiz isso, não tenho acesso ao
   Drive.
+
+## 2026-09-02 — Correção: dataset_25k_v2.zip TEM anotação e pode ser fonte de crop do InaTechShips
+
+- **Erro anterior corrigido**: em 2026-08-31, `dataset_25k_v2.zip` foi
+  classificado como "fora de escopo" (assumido como o mesmo artefato do
+  experimento de pré-treino direto do artigo original -- imagens inteiras
+  sem anotação de caixa). Essa conclusão foi tomada **sem verificar
+  anotação**, e estava incompleta.
+- **Achado real**: o zip contém `reconstrucao_report.json` documentando
+  que `dataset_25k_v2` é uma reconstrução posterior de
+  `InaTechShips/dataset_25k` -- reorganizada em splits train/val/test
+  (60/20/20, seed 42), com **anotação YOLO já presente**, incluindo
+  `labels_single_class/` já preparado. 27.796 imagens únicas, 10 classes
+  originais de tipo de embarcação.
+- **Decisão revisada**: `dataset_25k_v2.zip` é candidato real a fonte de
+  crop do InaTechShips (pendência sinalizada anteriormente e nunca
+  resolvida). Formato YOLO já verificado como compatível com o extrator
+  já existente (`extrair_crops_de_yolo`) -- se confirmado no exame
+  detalhado, nenhum extrator novo é necessário, mesmo padrão de
+  reaproveitamento já usado para SMD e UA-DETRAC.
+- **Lição de método**: esta correção reforça a prática de nunca
+  classificar um artefato como "fora de escopo" sem verificar
+  explicitamente a presença/ausência de anotação -- a classificação
+  anterior foi feita por inferência de nome/contexto, não por inspeção
+  direta do conteúdo.
+
+## 2026-09-02 — InaTechShips confirmado: formato YOLO, 27.796 imagens, estrutura diferente das outras três fontes
+
+- **Estrutura confirmada**: `dataset_25k_v2.zip`, splits train/val/test
+  (16.677/5.558/5.561, disjuntos por id, checagem de disjunção já presente
+  no relatório de reconstrução). YOLO, `labels_single_class/` já pronto
+  (10 classes originais de tipo de navio colapsadas para `embarcacao`).
+- **Achado estrutural**: a caixa de anotação de amostra cobre ~92% de
+  largura e ~59% de altura da imagem -- sugere que o InaTechShips é
+  composto de fotos de close-up de navio único (estilo catálogo/spotting),
+  não cenas de vigilância com objetos pequenos e distantes como SMD,
+  SeaShips e ABOShips. Implicação esperada: crops desta fonte devem ser
+  tipicamente maiores e com mais detalhe visual que as outras três --
+  contribuição de diversidade genuína ao pool, não um problema.
+- **Decisão**: nenhum extrator novo necessário -- reaproveita
+  `extrair_crops_de_yolo` (já usado para SMD e UA-DETRAC). Como é fonte de
+  crop pura (não tem papel de alvo/fundo de composição), as três divisões
+  (train/val/test) serão combinadas num único pool, maximizando volume
+  (sem risco de memorização, que só se aplica ao dataset-alvo).
+
+## 2026-09-02 — Entregue: script de extração do InaTechShips (quarta fonte de crop)
+
+- `scripts/extrair_inatechships.py`: extrai `dataset_25k_v2.zip`, roda
+  `extrair_crops_de_yolo` três vezes (train/val/test, sem novo código),
+  combina os manifestos de cobertura dos três splits antes de aplicar o
+  filtro unificado sobre o pool combinado, e compacta o resultado num
+  único `crops_sam3/inatechships.zip` -- mesma convenção de armazenamento
+  já corrigida para as outras três fontes.
+- `min_dim_px=20` já incorporado como valor de exemplo no docstring do
+  script, refletindo a decisão fechada na tarefa 0.2.
+- Suíte completa (sem alteração): 83/83 -- este script, como os outros
+  três de ponta a ponta, depende de zip real e não tem teste unitário
+  próprio (mesmo padrão já estabelecido).
+- **Ação pendente para você rodar no Colab**: executar o script com
+  `segmentador=segmentador_sam3` -- ainda não fiz isso, não tenho acesso
+  ao Drive.
