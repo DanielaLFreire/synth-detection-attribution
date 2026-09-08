@@ -924,3 +924,68 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
   casos) ainda não foi feita para SeaShips e ABOShips, ao contrário de SMD
   e UA-DETRAC (já investigados). Recomendado antes de decidir `min_dim_px`
   definitivo na tarefa 0.2, mas não impede o início dessa tarefa.
+
+## 2026-09-02 — Inspeção de qualidade do SeaShips: terceiro mecanismo de falha (folga de anotação)
+
+- **Resultado do pool completo (9.198 crops)**: cobertura média 0,514,
+  mínima 0,056 (nunca zero — diferente de SMD e UA-DETRAC), máxima 0,955.
+  26 casos (0,28%) abaixo de 0,15 -- taxa intermediária entre SMD (0,07%)
+  e UA-DETRAC (0,34%).
+- **Padrão visual nos piores casos**: a maioria mostra DOIS objetos
+  segmentados separados dentro do mesmo crop, com grande vão vazio entre
+  eles -- terceiro mecanismo de falha, distinto dos já registrados para
+  SMD (objeto minúsculo isolado) e UA-DETRAC (oclusão por densidade de
+  cena). Interpretação: a caixa de anotação original do SeaShips, em
+  vários casos, é larga/frouxa o suficiente para abranger a embarcação
+  principal e um segundo objeto pequeno distante (outra embarcação,
+  boia, estrutura de doca), com água vazia entre os dois -- o SAM 3
+  segmenta corretamente um objeto dentro da caixa, mas a cobertura fica
+  moderada porque a caixa em si não corresponde a um único objeto
+  compacto.
+- **Conexão direta com feature já planejada**: este padrão é exatamente o
+  que a feature `folga_anotacao` (Família 3, §6 do plano) foi desenhada
+  para capturar -- evidência visual concreta, antes mesmo do Estágio A
+  rodar, de que "qualidade de anotação da fonte" é uma dimensão real e
+  observável, não uma hipótese abstrata. Reforça a decisão já registrada
+  de decompor "fonte" em `folga_anotacao`/`truncamento` para testar
+  mediação no SHAP.
+- **Decisão**: pool do SeaShips (SAM 3) aceito como está -- taxa de falha
+  baixa e mecanismo bem identificado, não uma falha do segmentador.
+
+## 2026-09-02 — Inspeção de qualidade do ABOShips: taxa de falha maior explicada pelo perfil de tamanho já conhecido da fonte
+
+- **Resultado do pool completo (41.967 crops)**: cobertura média 0,615,
+  mínima 0,000, máxima 1,000. 398 casos (0,95%) abaixo de 0,15 -- taxa
+  maior que as outras três fontes (SMD 0,07%, SeaShips 0,28%, UA-DETRAC
+  0,34%).
+- **Descartada hipótese de inconsistência de anotação**: taxa de
+  divergência entre `width`/`height` do CSV e a bbox derivada é 0,000
+  tanto nas falhas quanto no resto -- não é problema de dado corrompido.
+- **Causa confirmada**: as 167 falhas completas (cobertura=0) têm menor
+  lado com mediana de 5px, máximo 17px -- todas abaixo de 20px. No pool
+  inteiro, 38,3% das caixas têm menor lado <20px (consistente com o
+  "66,3% <50px" já documentado no projeto anterior para esta fonte
+  especificamente). Dessas caixas <20px, apenas 1,0% falha completamente
+  (cobertura zero) -- a falha total é exceção mesmo dentro do subgrupo
+  difícil, não a regra.
+- **Interpretação**: a taxa de falha mais alta do ABOShips não é defeito
+  do SAM 3 -- é consequência direta e já esperada do perfil de tamanho
+  conhecido e registrado desta fonte (fração grande de objetos
+  extremamente pequenos). Confirmação numérica nova de uma observação já
+  registrada, não achado inédito.
+- **Decisão**: pool do ABOShips (SAM 3) aceito como está.
+
+## 2026-09-02 — Inspeção de qualidade concluída nas quatro fontes
+
+| Fonte | Cobertura média | Abaixo de 0,15 | Mecanismo principal de falha |
+|---|---|---|---|
+| SMD | 0,481 | 0,07% | objeto minúsculo isolado |
+| SeaShips | 0,514 | 0,28% | folga de anotação (caixa larga cobrindo 2 objetos) |
+| UA-DETRAC | 0,694 | 0,34% | objeto pequeno + oclusão por densidade de trânsito |
+| ABOShips | 0,615 | 0,95% | fração grande de objetos <20px (perfil conhecido da fonte) |
+
+Todas as quatro fontes com segmentação SAM 3 aceita. Cada fonte revelou um
+mecanismo de falha distinto e explicável -- nenhum indica defeito
+sistemático do segmentador. Encerra a etapa de segmentação da Fase -1;
+próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
+`min_dim_px`).
