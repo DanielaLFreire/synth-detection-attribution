@@ -905,3 +905,22 @@ Este arquivo é distinto do `CHANGELOG.md` da raiz (que registra mudanças de
 - Coberto por `tests/test_archive_utils.py` (4 testes, incluindo o ciclo
   completo compactar→extrair→formato do pool, e combinação de múltiplas
   fontes num pool único). Suíte completa: 78/78 passando.
+
+## 2026-09-02 — Segmentação com SAM 3 concluída nas quatro fontes
+
+- **SeaShips**: 9.198 crops, compactados em `crops_sam3/seaships.zip`.
+- **ABOShips**: 41.967 crops, compactados em `crops_sam3/aboships.zip`.
+- **Contagens conferem exatamente** com a extração retangular original
+  (tarefa -1.6, antes da segmentação) para as duas fontes — confirma que a
+  segmentação SAM 3 não altera quantos crops passam pelo filtro unificado
+  (`min_dim_px=1`, sem filtrar nada nesta rodada), só como cada crop é
+  recortado/mascarado.
+- **Estado final**: as quatro fontes de crops (SMD, SeaShips, ABOShips,
+  UA-DETRAC) estão segmentadas com SAM 3, compactadas em `.zip` desde a
+  origem (sem arquivos soltos no Drive), com manifesto de extração
+  (incluindo `cobertura_mascara`) preservado para cada uma. Isso fecha a
+  etapa de segmentação da Fase -1/tarefa -1.6.
+- **Pendente, não bloqueante**: inspeção de qualidade (amostra + piores
+  casos) ainda não foi feita para SeaShips e ABOShips, ao contrário de SMD
+  e UA-DETRAC (já investigados). Recomendado antes de decidir `min_dim_px`
+  definitivo na tarefa 0.2, mas não impede o início dessa tarefa.
