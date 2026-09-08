@@ -989,3 +989,25 @@ mecanismo de falha distinto e explicável -- nenhum indica defeito
 sistemático do segmentador. Encerra a etapa de segmentação da Fase -1;
 próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 `min_dim_px`).
+
+## 2026-09-02 — Tarefa 0.2: perfilamento das fontes e tabela de decisão de min_dim_px
+
+- **Entregue**: `src/profiling/source_profile.py` -- `perfilar_fonte()`
+  lê os manifestos de extração já gerados (nenhum dado novo necessário) e
+  calcula estatísticas descritivas do menor lado de cada crop por fonte;
+  `tabela_decisao_min_dim_px()` monta uma tabela fonte × limiar candidato,
+  mostrando quantos crops sobreviveriam em cada opção -- decisão do valor
+  final permanece humana, informada pelo trade-off explícito, não
+  calculada automaticamente.
+- `scripts/perfilar_fontes.py` roda contra os três manifestos reais
+  disponíveis no Drive (SMD, SeaShips, ABOShips -- UA-DETRAC fica de fora
+  desta tabela porque não compete pelo mesmo `min_dim_px`: é fonte de um
+  domínio de validação separado, com seu próprio filtro).
+- Coberto por `tests/test_source_profile.py` (5 testes, incluindo um que
+  simula duas fontes com perfis de tamanho bem diferentes e confirma que
+  a tabela revela o trade-off sem escolher um número sozinha). Suíte
+  completa: 83/83.
+- **Ação pendente para você rodar no Colab**: executar
+  `scripts/perfilar_fontes.py` para gerar a tabela real e decidir
+  `min_dim_px` com base nela -- ainda não fiz isso, não tenho acesso ao
+  Drive.
