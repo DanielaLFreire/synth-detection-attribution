@@ -1283,3 +1283,29 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Isso encerra a Fase 0.** Próxima etapa do cronograma: Fase 1 (piloto
   do protocolo de treino V2 -- primeira etapa que exige GPU de treino
   neste projeto).
+
+## 2026-09-02 — Início da Fase 1: montador de trainlist balanceado, reescrito e testado
+
+- **Distinção explícita registrada**: `n_variacoes=13` foi rejeitado na
+  tarefa 0.4 (colagens de sondagem do Estágio A) porque a justificativa
+  original (equilíbrio real/sintético 50/50 num braço de treino com GPU)
+  não se aplicava -- nenhum treino ocorre sobre aquelas colagens. Aqui, na
+  Fase 1, a mesma justificativa **se aplica de verdade**: estamos
+  montando o braço de treino real. Reaproveitar 13 nesta fase é
+  verificado, não herdado às cegas.
+- **Entregue**: `src/train/trainlist.py` -- `construir_trainlist_balanceado()`
+  (real repetido N vezes + sintético 1 vez, formato de lista de caminhos
+  consumível pelo `train:` de um data.yaml Ultralytics) e
+  `construir_trainlist_real_sobreamostrado()` (braço de controle: real
+  repetido pelo MESMO fator do braço sintético, zero sintéticos --
+  isolando o efeito da repetição do efeito da composição, §5.7 do plano).
+  Reescrito do zero neste projeto, não importa código do projeto
+  anterior.
+- Coberto por `tests/test_trainlist.py` (4 testes, incluindo reprodução
+  proporcional do cenário real de 50/50 com `repeat_real=13`). Suíte
+  completa: 93/93.
+- **Próximo passo da Fase 1**: gerar as sintéticas de treino de verdade
+  (composição sobre o split de TREINO do CITRA, com
+  `permitir_split_treino=True` explícito, combinando o pool das quatro
+  fontes) e escrever o script que invoca o treino Ultralytics YOLO
+  (`yolo11n.pt`, confirmado pelo usuário) para os três braços × 3 seeds.
