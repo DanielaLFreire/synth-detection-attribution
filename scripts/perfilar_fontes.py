@@ -24,6 +24,11 @@ MANIFESTOS_PADRAO = {
     "SMD": f"{RAIZ_CROPS}/manifesto_extracao_bruta_smd.csv",
     "SeaShips": f"{RAIZ_CROPS}/manifesto_extracao_bruta_seaships.csv",
     "ABOShips": f"{RAIZ_CROPS}/manifesto_extracao_bruta_aboships.csv",
+    "InaTechShips": [
+        f"{RAIZ_CROPS}/manifesto_extracao_bruta_inatechships_train.csv",
+        f"{RAIZ_CROPS}/manifesto_extracao_bruta_inatechships_val.csv",
+        f"{RAIZ_CROPS}/manifesto_extracao_bruta_inatechships_test.csv",
+    ],
 }
 
 CANDIDATOS_PADRAO = [8, 12, 16, 20, 24, 32, 40, 48]
@@ -40,7 +45,8 @@ def main(
     perfis = []
     print("Perfilando fontes a partir dos manifestos de extração...\n")
     for fonte, caminho in manifestos.items():
-        perfil = perfilar_fonte(Path(caminho), fonte=fonte)
+        caminho_normalizado = [Path(c) for c in caminho] if isinstance(caminho, list) else Path(caminho)
+        perfil = perfilar_fonte(caminho_normalizado, fonte=fonte)
         perfis.append(perfil)
         if perfil["n_crops"] == 0:
             print(f"  {fonte}: manifesto vazio ou não encontrado -- ignorado.")

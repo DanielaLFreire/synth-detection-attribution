@@ -26,18 +26,23 @@ def _percentil(valores: list[float], p: float) -> float:
     return ordenados[f] + (ordenados[c] - ordenados[f]) * (k - f)
 
 
-def perfilar_fonte(caminho_manifesto: Path, fonte: str) -> dict:
-    """Lê um manifesto de extração e retorna estatísticas descritivas do
-    menor lado de cada crop extraído com sucesso (extraido=True)."""
+def perfilar_fonte(caminho_manifesto: Path | list[Path], fonte: str) -> dict:
+    """Lê um manifesto de extração (ou uma lista de manifestos, quando a
+    fonte foi extraída em múltiplas etapas -- ex.: InaTechShips, extraído
+    por split train/val/test em manifestos separados) e retorna
+    estatísticas descritivas do menor lado de cada crop extraído com
+    sucesso (extraido=True)."""
+    caminhos = [caminho_manifesto] if isinstance(caminho_manifesto, (str, Path)) else list(caminho_manifesto)
     menores_lados: list[int] = []
 
-    with open(caminho_manifesto, newline="", encoding="utf-8") as f:
-        for linha in csv.DictReader(f):
-            if linha.get("extraido") != "True":
-                continue
-            largura = int(linha["largura_px"])
-            altura = int(linha["altura_px"])
-            menores_lados.append(min(largura, altura))
+    for caminho in caminhos:
+        with open(caminho, newline="", encoding="utf-8") as f:
+            for linha in csv.DictReader(f):
+                if linha.get("extraido") != "True":
+                    continue
+                largura = int(linha["largura_px"])
+                altura = int(linha["altura_px"])
+                menores_lados.append(min(largura, altura))
 
     if not menores_lados:
         return {"fonte": fonte, "n_crops": 0}

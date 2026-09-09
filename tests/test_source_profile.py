@@ -94,3 +94,20 @@ def test_tabela_decisao_compara_multiplas_fontes_com_perfis_diferentes(tmp_path)
 
     assert linha_grande["pct_mantidos_em_20px"] == 100.0  # nenhum descartado
     assert linha_pequena["pct_mantidos_em_20px"] == 40.0   # 4 de 10 sobrevivem
+
+
+def test_perfilar_fonte_aceita_lista_de_multiplos_manifestos(tmp_path):
+    """Caso do InaTechShips: extraído em três manifestos separados
+    (train/val/test) que precisam ser combinados num único perfil."""
+    caminho_train = tmp_path / "manifesto_train.csv"
+    caminho_val = tmp_path / "manifesto_val.csv"
+    caminho_test = tmp_path / "manifesto_test.csv"
+    _criar_manifesto_sintetico(caminho_train, [(30, 30), (40, 40)])
+    _criar_manifesto_sintetico(caminho_val, [(10, 10)])
+    _criar_manifesto_sintetico(caminho_test, [(50, 50)])
+
+    perfil = perfilar_fonte([caminho_train, caminho_val, caminho_test], fonte="InaTechShips")
+
+    assert perfil["n_crops"] == 4  # 2 + 1 + 1, combinados
+    assert perfil["menor_lado_min"] == 10
+    assert perfil["menor_lado_max"] == 50

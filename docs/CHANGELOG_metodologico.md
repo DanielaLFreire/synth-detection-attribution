@@ -1072,3 +1072,24 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Ação pendente para você rodar no Colab**: executar o script com
   `segmentador=segmentador_sam3` -- ainda não fiz isso, não tenho acesso
   ao Drive.
+
+## 2026-09-02 — InaTechShips extraído com SAM 3 (27.733 crops) e tabela de decisão atualizada para quatro fontes
+
+- **Resultado da extração**: 27.796 crops extraídos (train+val+test
+  combinados), 27.733 mantidos após o filtro `min_dim_px=20` (99,8% de
+  aproveitamento) -- taxa de perda quase nula, consistente com o achado
+  estrutural já registrado (caixas grandes cobrindo quase o quadro
+  inteiro, poucas caixas caem abaixo de 20px nesta fonte).
+- **`src/profiling/source_profile.py` estendido**: `perfilar_fonte()`
+  agora aceita um único manifesto OU uma lista de manifestos (necessário
+  porque o InaTechShips foi extraído em três manifestos separados, um por
+  split, diferente das outras três fontes que geram um manifesto único).
+  Retrocompatível -- chamada com um único caminho continua funcionando
+  sem alteração. `scripts/perfilar_fontes.py` atualizado para incluir o
+  InaTechShips (lista dos três manifestos) na tabela de decisão.
+- Coberto por 1 teste novo (`test_perfilar_fonte_aceita_lista_de_multiplos_manifestos`).
+  Suíte completa: 84/84.
+- **Ação pendente para você rodar no Colab**: re-executar
+  `scripts/perfilar_fontes.py` para gerar a tabela de decisão com as
+  QUATRO fontes reais, confirmando se `min_dim_px=20` continua sendo a
+  escolha certa agora que o InaTechShips está incluído.
