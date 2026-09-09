@@ -1116,3 +1116,36 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   preditor direto -- exatamente o tipo de confound que o desenho do
   Estágio A já foi construído para evitar.
 - **Tarefa 0.2 concluída.**
+
+## 2026-09-02 — Tarefa 0.3: verificação de cobertura do reservatório para o fatorial
+
+- **Entregue**: `src/profiling/coverage_check.py` -- `obter_tamanhos_absolutos_alvo()`
+  lê os labels YOLO do dataset-alvo e retorna a lista bruta de dimensões
+  absolutas de caixa (mesma lógica de conversão de `target_profile.py`,
+  aqui sem agregação, para permitir amostragem individual);
+  `simular_compatibilidade_escala()` simula pareamentos aleatórios
+  (crop de uma fonte × caixa de destino real) e classifica cada um por
+  `fator_reescala` resultante (mesma fórmula usada em `src/compose/compose.py`)
+  em "casada" (faixa configurável, padrão [0,5, 2,0]), "descasada_downscale"
+  ou "descasada_upscale".
+- **Teste central** (`test_fonte_com_crops_muito_maiores_que_destino_produz_maioria_downscale`):
+  reproduz em miniatura, com números sintéticos no mesmo padrão do
+  InaTechShips real (crops ~400px vs. destino ~30px), e confirma
+  numericamente (>90% descasada_downscale, <10% casada) o risco que
+  havíamos identificado por raciocínio antes de rodar contra dados reais.
+- `scripts/verificar_cobertura_fatorial.py` roda a simulação real:
+  tamanhos de destino lidos do split de treino do CITRA-3D-Real
+  (`labels_final`, maior amostra disponível), tamanhos de origem lidos dos
+  manifestos de filtro de qualidade já gerados (crops que passaram
+  `min_dim_px=20`) das quatro fontes.
+- Coberto por `tests/test_coverage_check.py` (5 testes). Suíte completa:
+  89/89.
+- **Ação pendente para você rodar no Colab**: executar
+  `scripts/verificar_cobertura_fatorial.py` -- ainda não fiz isso, não
+  tenho acesso ao Drive. Se o InaTechShips confirmar `pct_casada` muito
+  baixo com dados reais (como a hipótese sugere), será necessário decidir
+  como o Estágio B vai lidar com isso antes da Fase 3 -- opções a discutir
+  então: excluir InaTechShips da célula "casada" (aceitando desbalanceamento
+  documentado), ou restringir a amostragem de destino usada nessa célula a
+  um subconjunto de caixas do CITRA compatível com o tamanho nativo do
+  InaTechShips.
