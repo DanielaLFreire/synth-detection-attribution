@@ -1220,3 +1220,15 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   análise de poder já reservada para a Fase 1.
 - **Nenhum dano feito**: o script `gerar_colagens_sondagem.py` ainda não
   foi executado contra dados reais quando este erro foi identificado.
+
+## 2026-09-02 — n_variacoes fechado em 20, com justificativa própria documentada no código
+
+- `scripts/gerar_colagens_sondagem.py` atualizado: `n_variacoes=20` como
+  padrão, com a justificativa correta (mais resolução para o Estágio A,
+  sem custo de GPU) documentada diretamente no docstring da função --
+  explicitamente marcada como não-herdada do valor 13 do projeto
+  anterior, e como revisável se a Fase 2 mostrar necessidade.
+- Volume esperado revisado: 332 imagens de val × 20 = 6.640 cenas
+  geradas; 1.267 caixas × 20 ≈ 25.340 linhas de manifesto (colagens).
+- Suíte completa: 89/89 (sem novo teste -- mudança de valor padrão em
+  script de integração, mesmo padrão dos demais).
