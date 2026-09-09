@@ -1309,3 +1309,23 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `permitir_split_treino=True` explícito, combinando o pool das quatro
   fontes) e escrever o script que invoca o treino Ultralytics YOLO
   (`yolo11n.pt`, confirmado pelo usuário) para os três braços × 3 seeds.
+
+## 2026-09-02 — Fase 1: script de geração das sintéticas de treino
+
+- `scripts/gerar_sinteticas_treino.py`: compõe sobre o split de TREINO do
+  CITRA-3D-Real, com `permitir_split_treino=True` explícito -- uso
+  legítimo aqui (geração de dado de treino), diferente do Estágio A
+  (colagens de sondagem, que usam val justamente para não tocar treino).
+  Combina o pool das quatro fontes, `n_variacoes=13` (verificado como
+  aplicável neste contexto, ver entrada anterior).
+- Resultado esperado: 1.348 imagens de treino × 13 = 17.524 imagens
+  sintéticas de cena completa, volume compatível com o balanceamento
+  50/50 via `construir_trainlist_balanceado(repeat_real=13)`.
+- Compactado em `sinteticas_images.zip` + `sinteticas_labels.zip` antes de
+  ir ao Drive, mesma convenção de armazenamento já corrigida.
+- Suíte completa: 93/93 (sem novo teste unitário -- script de integração
+  dependente de dado real, mesmo padrão dos demais).
+- **Ação pendente para você rodar no Colab**: executar o script -- ainda
+  não fiz isso, não tenho acesso ao Drive. Depois de gerado, os dois zips
+  precisam ser extraídos para pastas locais antes de montar as trainlists
+  (Ultralytics exige arquivos soltos em disco, não dentro de zip).
