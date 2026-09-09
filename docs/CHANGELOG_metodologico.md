@@ -1263,3 +1263,23 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   os limites já declarados no plano (§11).
 - **Tarefa 0.5 concluída.** Resta na Fase 0: 0.6 (lacrar o commit de
   pré-registro).
+
+## 2026-09-02 — Tarefa 0.6: script de lacração do pré-registro
+
+- `scripts/lacrar_pre_registro.py`: calcula hash SHA-256 de cada artefato
+  citado no documento de previsões (`perfil_citra_3d_real.json`,
+  `tabela_min_dim_px.json`, `cobertura_fatorial.json`,
+  `manifesto_colagens_sondagem_val.csv`), grava em `pre_registro/hashes.json`
+  no Drive -- permite verificação futura de que os números citados nas
+  previsões não foram alterados depois do commit de lacração.
+- Suíte completa: 89/89 (script utilitário, sem lógica testável além de
+  hash de arquivo, mesmo padrão de outros scripts de I/O simples).
+- **Ação pendente para você**: (1) rodar `scripts/lacrar_pre_registro.py`
+  no Colab; (2) copiar o `hashes.json` gerado para
+  `docs/pre_registro/hashes.json` no repositório; (3) fazer o commit final
+  que lacra a Fase 0 -- previsões + hashes juntos, no mesmo commit,
+  seguido de push para o repositório público (garantindo o carimbo de
+  tempo externo verificável, §0 do plano).
+- **Isso encerra a Fase 0.** Próxima etapa do cronograma: Fase 1 (piloto
+  do protocolo de treino V2 -- primeira etapa que exige GPU de treino
+  neste projeto).
