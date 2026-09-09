@@ -1232,3 +1232,34 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   geradas; 1.267 caixas × 20 ≈ 25.340 linhas de manifesto (colagens).
 - Suíte completa: 89/89 (sem novo teste -- mudança de valor padrão em
   script de integração, mesmo padrão dos demais).
+
+## 2026-09-02 — Tarefa 0.4 concluída: colagens de sondagem geradas
+
+- **Resultado**: 25.340 colagens (linhas de manifesto) geradas sobre o
+  split de validação do CITRA-3D-Real, combinando o pool das quatro
+  fontes (85.941 crops carregados: SMD 7.043, SeaShips 9.198, ABOShips
+  41.967, InaTechShips 27.733).
+- **Checagem de consistência**: 25.340 = 1.267 caixas × 20 variações,
+  exatamente como previsto -- confirma que o componente de composição
+  está se comportando conforme o design.
+- Imagens, labels e manifesto compactados e salvos em
+  `estagio_a/colagens_sondagem_val/` no Drive.
+- **Tarefa 0.4 concluída.** Restam na Fase 0: 0.5 (redigir e commitar as
+  previsões) e 0.6 (lacrar o commit de pré-registro).
+
+## 2026-09-02 — Tarefa 0.5: previsões pré-registradas redigidas
+
+- **Entregue**: `docs/pre_registro/previsoes_fase0.md` -- sete previsões
+  específicas e falseáveis (P1-P7), cada uma com critério explícito de
+  confirmação e de refutação, cobrindo: ranking SHAP esperado do Estágio A
+  (P1-P4), efeito principal esperado do Estágio B (P5-P6), e replicação do
+  mecanismo no segundo domínio de validação (P7).
+- Previsões derivadas dos achados já medidos nesta sessão (não
+  inventadas): perfil do alvo (0.1), perfis das fontes (0.2), assimetria
+  de escala do InaTechShips (0.3), padrão de folga de anotação do
+  SeaShips e perfil de tamanho do ABOShips (inspeções de qualidade da
+  segmentação).
+- Documento explicita, em §5, o que **não** é previsto -- consistente com
+  os limites já declarados no plano (§11).
+- **Tarefa 0.5 concluída.** Resta na Fase 0: 0.6 (lacrar o commit de
+  pré-registro).
