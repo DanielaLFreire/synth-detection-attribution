@@ -1093,3 +1093,26 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `scripts/perfilar_fontes.py` para gerar a tabela de decisão com as
   QUATRO fontes reais, confirmando se `min_dim_px=20` continua sendo a
   escolha certa agora que o InaTechShips está incluído.
+
+## 2026-09-02 — Tabela de decisão de min_dim_px confirmada com as quatro fontes reais
+
+- **Decisão `min_dim_px=20` confirmada**: SMD 94,8%, SeaShips 96,4%,
+  ABOShips 61,7% (único custo real), InaTechShips 99,8% mantidos.
+  Nenhuma mudança em relação à decisão feita com 3 fontes.
+- **Achado adicional -- disparidade de escala nativa entre fontes**:
+  mediana do menor lado por fonte -- SMD 54px, SeaShips 73px, ABOShips
+  27px, **InaTechShips 358px** (mais de 6× maior que qualquer outra
+  fonte). Consistente com a caracterização já registrada (InaTechShips =
+  fotos de close-up de navio único, não cenas de vigilância com objetos
+  pequenos e distantes).
+- **Relevância metodológica**: como a escala do dataset-alvo (CITRA-3D-Real,
+  perfil da tarefa 0.1) é muito mais próxima da escala do
+  SMD/SeaShips/ABOShips do que da do InaTechShips, colagens usando crops
+  do InaTechShips vão exigir fator de reescala tipicamente muito mais
+  agressivo (redução maior) que colagens das outras três fontes. Isso
+  reforça, com evidência numérica concreta, a decisão já registrada de
+  tratar `fator_reescala` (Família 2, §6 do plano) como feature própria a
+  medir por colagem, em vez de confiar em "identidade da fonte" como
+  preditor direto -- exatamente o tipo de confound que o desenho do
+  Estágio A já foi construído para evitar.
+- **Tarefa 0.2 concluída.**
