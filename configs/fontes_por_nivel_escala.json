@@ -1,0 +1,17 @@
+{
+  "descricao": "Configuração de fontes por nível do fator 'compatibilidade de escala' do fatorial do Estágio B (§5.7 do plano). Decisão registrada em 2026-09-02, com base em simulação real de pareamento (ver scripts/verificar_cobertura_fatorial.py).",
+  "decisao_registrada_em": "2026-09-02",
+  "metodo": "Simulação de pareamento aleatório (crop de cada fonte x caixa real do CITRA-3D-Real, 20000 amostras por fonte), fator_reescala = area_destino / area_origem, faixa 'casada' = [0.5, 2.0].",
+  "evidencia_numerica": {
+    "SMD": {"n_origem": 7043, "pct_casada": 22.985, "pct_descasada_downscale": 58.85, "pct_descasada_upscale": 18.165},
+    "SeaShips": {"n_origem": 9198, "pct_casada": 18.095, "pct_descasada_downscale": 70.215, "pct_descasada_upscale": 11.69},
+    "ABOShips": {"n_origem": 41967, "pct_casada": 21.44, "pct_descasada_downscale": 31.96, "pct_descasada_upscale": 46.6},
+    "InaTechShips": {"n_origem": 27733, "pct_casada": 0.75, "pct_descasada_downscale": 99.045, "pct_descasada_upscale": 0.205}
+  },
+  "fontes_por_nivel": {
+    "escala_casada": ["SMD", "SeaShips", "ABOShips"],
+    "escala_descasada": ["SMD", "SeaShips", "ABOShips", "InaTechShips"]
+  },
+  "justificativa": "InaTechShips excluído da célula 'escala_casada' porque seu tamanho nativo (mediana 358px) é estruturalmente incompatível com a escala típica das caixas do CITRA-3D-Real -- pct_casada=0.75%, quase 30x menor que a mais baixa das outras três fontes (18.1%). Não é limitação de amostragem; é característica genuína da fonte (fotos de close-up de navio único, não cena de vigilância com objeto pequeno/distante). Assimetria pré-registrada e reportada como achado substantivo, não escondida.",
+  "uso_pretendido": "Ao construir as células do fatorial na Fase 3, a célula 'escala_casada' deve amostrar exclusivamente das fontes listadas em fontes_por_nivel.escala_casada, balanceadas entre si (proporção comparável de cada uma). A célula 'escala_descasada' pode amostrar das quatro fontes."
+}

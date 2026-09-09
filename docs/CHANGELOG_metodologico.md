@@ -1149,3 +1149,26 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   documentado), ou restringir a amostragem de destino usada nessa célula a
   um subconjunto de caixas do CITRA compatível com o tamanho nativo do
   InaTechShips.
+
+## 2026-09-02 — Tarefa 0.3 concluída: decisão sobre assimetria de fonte na célula "escala casada"
+
+- **Confirmado com dados reais**: SMD 23,0%, SeaShips 18,1%, ABOShips
+  21,4%, **InaTechShips 0,75%** de pareamentos "casados" (fator_reescala
+  entre 0,5 e 2,0), simulados contra as caixas reais do split de treino
+  do CITRA-3D-Real (20.000 amostras por fonte, 4.489 caixas de destino).
+- **Decisão fechada** (opção 1 do conjunto de alternativas + espírito da
+  opção 3): InaTechShips excluído da célula "escala casada" do fatorial;
+  participa plenamente da célula "escala descasada" (99,0% de
+  aproveitamento). SMD, SeaShips e ABOShips participam de ambas as
+  células, balanceados entre si. Assimetria pré-registrada e reportada
+  como achado substantivo -- o InaTechShips é, por natureza, incompatível
+  de escala com o alvo -- não escondida como limitação.
+- **Registrado em três lugares**: (1) `docs/PLANO_v2_atribuicao_causal_composicao_sintetica.md`,
+  §5.7, com a justificativa completa; (2) este changelog; (3)
+  `configs/fontes_por_nivel_escala.json`, artefato de configuração que a
+  Fase 3 (construção real das células do fatorial) vai consumir --
+  codifica a decisão para que não dependa de memória da equipe quando
+  chegar a hora de implementar.
+- **Tarefa 0.3 concluída.** Restam na Fase 0: 0.4 (gerar colagens de
+  sondagem sobre o split de validação), 0.5 (redigir e commitar as
+  previsões), 0.6 (lacrar o commit de pré-registro).

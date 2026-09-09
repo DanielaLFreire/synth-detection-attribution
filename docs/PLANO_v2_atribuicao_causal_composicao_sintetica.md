@@ -283,6 +283,26 @@ permite comparação entre este estudo e trabalhos futuros com pisos de ruído
 diferentes, e é o tipo de rigor que revisores de periódico topo esperam além
 de p-valor e IC.
 
+**Decisão registrada sobre assimetria de fonte na célula "escala casada"
+(tarefa 0.3, medição real em 2026-09-02)**: simulação de pareamento
+aleatório (crop de cada fonte × caixa real do CITRA-3D-Real, 20.000
+amostras por fonte) mostrou que SMD, SeaShips e ABOShips têm fração
+comparável de pareamentos "casados" (fator_reescala entre 0,5 e 2,0):
+23,0%, 18,1% e 21,4% respectivamente. O InaTechShips produziu **0,75%**
+— quase 30× menor que a mais baixa das outras três — porque seu tamanho
+nativo (mediana 358px) é estruturalmente incompatível com a escala típica
+das caixas do CITRA. Isso não é uma limitação de amostragem; é uma
+característica genuína e irredutível da fonte (fotos de close-up de navio
+único vs. as outras três fontes, que são cenas de vigilância com objetos
+pequenos e distantes). **Decisão**: o InaTechShips é excluído da célula
+"escala casada" do fatorial — participa plenamente da célula "escala
+descasada" (onde tem 99,0% de aproveitamento). As outras três fontes
+participam de ambas as células, balanceadas entre si. Essa assimetria é
+pré-registrada e reportada explicitamente como achado substantivo (o
+InaTechShips é, por natureza, incompatível de escala com o alvo — um
+resultado a discutir no artigo, não uma imperfeição a esconder), não como
+limitação silenciosa do desenho.
+
 ## 6. Tabela de features do Estágio A (revisada)
 
 Estrutura mantida em quatro famílias (intrínsecas do crop, de transformação,
