@@ -1172,3 +1172,51 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Tarefa 0.3 concluída.** Restam na Fase 0: 0.4 (gerar colagens de
   sondagem sobre o split de validação), 0.5 (redigir e commitar as
   previsões), 0.6 (lacrar o commit de pré-registro).
+
+## 2026-09-02 — Tarefa 0.4: script de geração das colagens de sondagem
+
+- `scripts/gerar_colagens_sondagem.py`: combina o pool de crops das quatro
+  fontes (extração local dos quatro zips via `carregar_pool_de_crops_do_zip`,
+  já existente desde a correção de armazenamento), e chama
+  `src.compose.compor_dataset` sobre o split de **validação** do
+  CITRA-3D-Real -- nenhuma mudança no componente de composição foi
+  necessária, apenas montagem do pool combinado antes da chamada.
+- **`n_variacoes=13` proposto, não decidido unilateralmente**: mesmo valor
+  do projeto anterior, mas registrado explicitamente como proposta a
+  confirmar, não herança tácita -- como a composição não usa GPU, o custo
+  de aumentar esse número é de espaço/tempo de geração, não de cota de
+  GPU, e vale a equipe decidir com esse trade-off em mente.
+- Resultado esperado, com 332 imagens de validação e 1.267 boxes (perfil
+  já medido na tarefa 0.1): ~16.470 colagens (linhas de manifesto), ~4.316
+  imagens de cena completa geradas, compactadas em `colagens_images.zip` +
+  `colagens_labels.zip` antes de ir ao Drive.
+- **Ação pendente para você rodar no Colab**: executar
+  `scripts/gerar_colagens_sondagem.py` -- ainda não fiz isso, não tenho
+  acesso ao Drive.
+
+## 2026-09-02 — Correção: n_variacoes=13 não tinha justificativa válida para a tarefa 0.4
+
+- **Erro identificado**: ao propor `n_variacoes=13` para as colagens de
+  sondagem (tarefa 0.4), a justificativa dada foi "compatibilidade com o
+  piso de referência já conhecido" -- sem verificar se a razão original
+  do número 13 se aplicava ao novo contexto.
+- **Origem real do 13, localizada em `write_balanced_trainlist` (projeto
+  anterior)**: o número foi escolhido para equilibrar volume de dados
+  50/50 entre imagens reais e sintéticas no braço de treino "joint"
+  (real repetido 13× + sintético 1× = 17.524 + 17.524) -- uma
+  preocupação de balanceamento de TREINO SUPERVISIONADO COM GPU.
+- **Por que não se aplica aqui**: as colagens de sondagem do Estágio A
+  não treinam nenhum modelo -- servem só para gerar o alvo binário
+  (inferência com detector já treinado) e alimentar o GBM+SHAP. Não há
+  "braço joint" nem necessidade de equilíbrio real/sintético 50/50 neste
+  contexto. A justificativa original resolve um problema que não existe
+  aqui.
+- **Decisão corrigida**: `n_variacoes` para a tarefa 0.4 deve ser
+  escolhido por raciocínio próprio deste contexto (mais variações por
+  grupo geométrico ajudam a desemaranhar efeito de crop de efeito de
+  geometria, sem custo de GPU envolvido na composição em si), não por
+  herança do valor usado para outro propósito. Nenhuma análise de poder
+  formal foi feita para determinar um valor ótimo -- pendente, análogo à
+  análise de poder já reservada para a Fase 1.
+- **Nenhum dano feito**: o script `gerar_colagens_sondagem.py` ainda não
+  foi executado contra dados reais quando este erro foi identificado.
