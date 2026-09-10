@@ -1451,3 +1451,29 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `best.pt` -- custo baixo (~25 min cada) frente ao risco de comprometer
   o cálculo formal do piso de ruído com dado transcrito à mão ou
   metodologicamente inconsistente com o protocolo.
+
+## 2026-09-09 — Piso de ruído do B2 calculado (Fase 1)
+
+- **Operacionalização das "duas larguras de banda" (§9 do plano, antes
+  vaga, agora definida com precisão e reprodutível)**:
+  - **Banda 1 (ponto único)**: recall na época 150 (última, mesma do
+    placeholder de `epoca_checkpoint`). Mede ruído no caso mais sensível
+    a flutuação de uma única época.
+  - **Banda 2 (janela suavizada)**: média do recall nas últimas 10 épocas
+    (141-150) de cada seed. Suaviza flutuação época-a-época dentro de
+    cada seed antes de comparar entre seeds.
+- **Resultado (3 seeds de B2: 42, 123, 2024, dados reais de `results.csv`
+  recuperados do Drive)**:
+  - Banda 1: média 0,6883, desvio padrão 0,0078, amplitude (max-min)
+    0,0150 (1,50 pp).
+  - Banda 2: média 0,6889, desvio padrão 0,0062, amplitude 0,0121
+    (1,21 pp).
+- **Concordância entre bandas**: as duas medições convergem razoavelmente
+  (0,62-0,78 pp de desvio padrão) -- não é uma medição instável que muda
+  drasticamente conforme o critério.
+- **Regra de leitura estabelecida para as fases seguintes (§7 do plano)**:
+  um efeito medido na Fase 3 só deve ser tratado como real se o delta
+  observado for maior que ~1,5 pp (banda 1, mais conservadora) -- deltas
+  menores não são distinguíveis de flutuação de seed neste protocolo.
+- **Próximo passo**: rodar A_joint e controle × 3 seeds cada (6 execuções
+  restantes do piloto), com o script já corrigido para salvar no Drive.
