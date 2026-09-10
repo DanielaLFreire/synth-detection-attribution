@@ -1418,3 +1418,36 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Dado adicional já disponível como subproduto**: cada execução de B2
   levou ~0,41h (~24,6 min) -- rápido, dado que B2 é o braço com menos
   imagens por época (1.348) dos três.
+
+## 2026-09-09 — Perda de dados por desconexão de sessão + correção do pipeline
+
+- **Incidente**: a sessão do Colab desconectou após os três treinos de B2
+  (seeds 42, 123, 2024) -- `/content/` voltou ao estado padrão, `fase1_runs/`
+  e `fase1_dados_locais/` perdidos. Nenhum resultado tinha sido copiado
+  para o Drive (só os dados de entrada -- sintéticas, colagens -- tinham
+  essa proteção; os resultados de TREINO nunca tinham).
+- **Recuperação parcial**: os logs de console de cada treino (colados na
+  conversa) preservam as métricas por época impressas -- nenhum dado foi
+  perdido de forma irrecuperável, mas a extração ficou mais arriscada
+  (transcrição manual de texto longo, sujeita a erro) em vez de leitura
+  direta de `results.csv`.
+- **Correção aplicada**: `treinar_um_braco()` em `scripts/treinar_piloto_fase1.py`
+  agora copia `results.csv`, `args.yaml` e os pesos (`best.pt`, `last.pt`)
+  para o Drive ao final de cada execução -- mesma proteção que já
+  existia para os dados de entrada, agora estendida aos resultados de
+  treino. Aplica-se a todos os treinos futuros (as 6 execuções restantes
+  do piloto: A_joint e controle × 3 seeds).
+- **Leitura preliminar dos três B2 (via "Validating .../best.pt", números
+  de baixo risco de transcrição -- linha única por execução)**: recall
+  (`metrics/recall(B)`) = 0,690 (seed 42), 0,685 (seed 123), 0,695
+  (seed 2024). **Ressalva importante**: esses números vêm do checkpoint
+  `best.pt`, selecionado automaticamente pelo Ultralytics por critério de
+  fitness baseado em validação -- isso é, na prática, seleção de
+  checkpoint informada pelo val, exatamente o que o protocolo V2 (§3 do
+  plano) determina evitar. Não deve ser usado como o cálculo formal do
+  piso de ruído -- serve só como primeira leitura informal.
+- **Decisão**: re-executar os três seeds de B2 com o script corrigido,
+  em vez de confiar em transcrição manual do log ou nos números de
+  `best.pt` -- custo baixo (~25 min cada) frente ao risco de comprometer
+  o cálculo formal do piso de ruído com dado transcrito à mão ou
+  metodologicamente inconsistente com o protocolo.

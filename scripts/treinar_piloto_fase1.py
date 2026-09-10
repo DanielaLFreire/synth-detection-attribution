@@ -20,11 +20,13 @@ Uso no Colab (GPU necessária a partir daqui):
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 
 from src.train import ProtocoloTreinoV2, gerar_kwargs_treino
 
 DADOS_LOCAIS = "/content/fase1_dados_locais"
 DESTINO_RUNS = "/content/fase1_runs"
+DESTINO_RUNS_DRIVE = "/content/drive/MyDrive/PROJETO_MARINHA/EXPERIMENTO_ATRIBUICAO_CAUSAL/fase1_piloto/runs"
 
 # Contagens de imagens por época, já confirmadas na preparação dos dados
 N_IMAGENS_EPOCA = {
@@ -44,10 +46,20 @@ def treinar_um_braco(
     epochs_total: int = EPOCHS_TOTAL_PILOTO,
     dados_locais: str = DADOS_LOCAIS,
     destino_runs: str = DESTINO_RUNS,
+    destino_runs_drive: str = DESTINO_RUNS_DRIVE,
     pesos_base: str = "yolo11n.pt",
 ):
     """Roda um único treino (um braço, uma seed). Retorna o objeto de
-    resultados do Ultralytics."""
+    resultados do Ultralytics.
+
+    CORREÇÃO 2026-09-09: copia results.csv + args.yaml + weights/*.pt para
+    o Drive ao final -- antes desta correção, os resultados ficavam só em
+    `/content/...` (local do Colab), vulnerável a perda completa em caso
+    de desconexão de sessão (o que já aconteceu uma vez, ver
+    docs/CHANGELOG_metodologico.md). Os dados dos seeds 42/123/2024 do
+    braço B2 já treinados antes desta correção não foram salvos no Drive
+    -- só recuperados via log de console colado na conversa.
+    """
     from ultralytics import YOLO  # import tardio -- só necessário com GPU
 
     protocolo = ProtocoloTreinoV2(
@@ -80,6 +92,23 @@ def treinar_um_braco(
         deterministic=True,  # exigido para o portão de determinismo (§9 do plano)
         **kwargs,
     )
+
+    # cópia para o Drive -- ver docstring, correção de 2026-09-09
+    pasta_run_local = Path(destino_runs) / kwargs["name"]
+    pasta_run_drive = Path(destino_runs_drive) / kwargs["name"]
+    pasta_run_drive.mkdir(parents=True, exist_ok=True)
+    for nome_arquivo in ("results.csv", "args.yaml"):
+        origem = pasta_run_local / nome_arquivo
+        if origem.exists():
+            shutil.copy2(origem, pasta_run_drive / nome_arquivo)
+    pasta_weights_drive = pasta_run_drive / "weights"
+    pasta_weights_drive.mkdir(parents=True, exist_ok=True)
+    for nome_peso in ("best.pt", "last.pt"):
+        origem = pasta_run_local / "weights" / nome_peso
+        if origem.exists():
+            shutil.copy2(origem, pasta_weights_drive / nome_peso)
+    print(f"   Resultados copiados para o Drive: {pasta_run_drive}")
+
     return resultados
 
 
