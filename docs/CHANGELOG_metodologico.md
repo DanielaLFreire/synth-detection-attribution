@@ -1329,3 +1329,38 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   não fiz isso, não tenho acesso ao Drive. Depois de gerado, os dois zips
   precisam ser extraídos para pastas locais antes de montar as trainlists
   (Ultralytics exige arquivos soltos em disco, não dentro de zip).
+
+## 2026-09-02 — Sintéticas de treino geradas (Fase 1)
+
+- **Resultado**: 17.524 imagens sintéticas de cena completa geradas sobre
+  o split de treino do CITRA-3D-Real (58.357 colagens/linhas de
+  manifesto), a partir do pool combinado das quatro fontes (85.941 crops).
+- **Checagem de consistência**: 17.524 = 1.348 imagens de treino × 13
+  variações, exatamente como previsto -- confirma que o balanceamento
+  50/50 planejado (`repeat_real=13`) vai funcionar sem ajuste.
+- Compactado em `sinteticas_images.zip` + `sinteticas_labels.zip`,
+  salvos em `fase1_piloto/sinteticas_treino/` no Drive.
+
+## 2026-09-02 — Fase 1: script de preparação local dos dados de treino
+
+- **Motivo**: o treino lê cada imagem do trainlist uma vez por época --
+  com centenas de épocas, isso significa centenas de milhares de leituras.
+  Ler repetidamente do Drive via FUSE seria lento e sujeito ao mesmo tipo
+  de instabilidade de I/O já documentado (OSError do UA-DETRAC). Solução:
+  copiar tudo para disco local do Colab UMA VEZ antes do treino comecar --
+  diferente do caso de armazenamento (onde zipar resolve), aqui o
+  problema é leitura repetida durante o treino, que exige cópia local, não
+  compactação.
+- **Entregue**: `scripts/preparar_dados_locais_fase1.py` -- copia
+  imagens/labels reais do CITRA (train+val) e extrai as sintéticas de
+  treino para disco local; monta as três trainlists (B2, A_joint,
+  controle) via `construir_trainlist_balanceado`/`construir_trainlist_real_sobreamostrado`
+  (`repeat_real=13`); grava um `data.yaml` por braço, apontando `val:`
+  sempre para o mesmo split de validação real (nunca sintético).
+- Suíte completa: 93/93 (script de integração, sem teste unitário
+  próprio, mesmo padrão dos demais scripts dependentes de dado real).
+- **Próximo passo**: escrever o script que efetivamente invoca
+  `YOLO(...).train(...)` para os três braços × seeds, usando
+  `ProtocoloTreinoV2`/`gerar_kwargs_treino` já existentes -- ainda não
+  temos os valores finais de `epochs_total`/`epoca_checkpoint`/
+  `warmup_steps_alvo`, que são exatamente o que esta piloto deve revelar.
