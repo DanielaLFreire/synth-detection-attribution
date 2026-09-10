@@ -1394,3 +1394,27 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   primeiro o portão de determinismo (mesmo braço/seed duas vezes) antes
   do sweep completo de 9 treinos, para não gastar GPU num pipeline
   potencialmente não-determinístico.
+
+## 2026-09-09 — Portão de determinismo APROVADO (Fase 1)
+
+- **Teste**: braço B2, seed 42, duas execuções completas (150 épocas,
+  `deterministic=True`), em pastas de saída separadas
+  (`determinismo_run1`, `determinismo_run2`).
+- **Resultado**: comparação numérica direta dos dois `results.csv`
+  (não apenas inspeção visual do log) confirma que todas as colunas de
+  métrica e perda (`train/box_loss`, `train/cls_loss`, `train/dfl_loss`,
+  `metrics/precision(B)`, `metrics/recall(B)`, `metrics/mAP50(B)`,
+  `metrics/mAP50-95(B)`, `val/*_loss`, `lr/pg*`) são **numericamente
+  idênticas** nas 150 épocas entre as duas execuções. Só a coluna `time`
+  (relógio de parede, não faz parte do cálculo) diverge -- esperado, não
+  é uma violação de determinismo.
+- **Validação por comparação de arquivo, não de log**: optou-se por
+  carregar os dois `results.csv` e comparar programaticamente
+  (`df1.equals(df2)` + diff coluna a coluna) em vez de confiar na
+  similaridade visual do log de console -- prática mais rigorosa,
+  detecta divergências que passariam despercebidas a olho.
+- **Portão aprovado.** Segue para a medição do piso de ruído (3 seeds do
+  braço B2: 42 já disponível via `determinismo_run1`, faltam 123 e 2024).
+- **Dado adicional já disponível como subproduto**: cada execução de B2
+  levou ~0,41h (~24,6 min) -- rápido, dado que B2 é o braço com menos
+  imagens por época (1.348) dos três.
