@@ -1364,3 +1364,33 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `ProtocoloTreinoV2`/`gerar_kwargs_treino` já existentes -- ainda não
   temos os valores finais de `epochs_total`/`epoca_checkpoint`/
   `warmup_steps_alvo`, que são exatamente o que esta piloto deve revelar.
+
+## 2026-09-02 — Fase 1: script de treino real (Ultralytics YOLO)
+
+- `scripts/treinar_piloto_fase1.py`: invoca `YOLO(...).train(...)` para os
+  três braços (B2, A_joint, controle) × 3 seeds (42, 123, 2024) --
+  primeira etapa deste projeto que exige GPU de treino.
+- **`epoca_checkpoint` usado como placeholder** (última época) --
+  documentado explicitamente no código como não sendo a decisão final:
+  a piloto existe para observar a curva de validação e decidir esse valor
+  depois, não para assumi-lo antes.
+- **`epochs_total=150`** proposto e justificado com base em achados
+  parafraseados do histórico do projeto anterior (não copiados
+  verbatim): braços com sintético convergem muito rápido (pico observado
+  entre épocas 7-11 num teste específico) e depois degradam lentamente;
+  o baseline puro precisa de orçamento bem maior (~140 épocas registradas
+  no protocolo V2 anterior). 150 cobre a convergência esperada do
+  baseline com margem, e permite observar diretamente (não assumir) o
+  mesmo padrão de pico-e-degradação nos braços com sintético, usando
+  dados próprios deste projeto.
+- **`deterministic=True`** adicionado explicitamente à chamada de
+  `.train()` -- exigido pelo portão de determinismo (§9 do plano).
+- Suíte completa: 93/93 (script de treino real, sem teste unitário --
+  depende de GPU e Ultralytics instalado, mesmo padrão dos demais scripts
+  de execução real).
+- **Ação pendente para você rodar no Colab**: instalar `ultralytics` se
+  ainda não estiver, e executar o script -- esta é a primeira etapa que
+  realmente vai consumir a GPU confirmada disponível. Recomendo rodar
+  primeiro o portão de determinismo (mesmo braço/seed duas vezes) antes
+  do sweep completo de 9 treinos, para não gastar GPU num pipeline
+  potencialmente não-determinístico.
