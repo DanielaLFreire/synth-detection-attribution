@@ -1533,3 +1533,28 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Isso encerra a análise central da Fase 1.** Pendente: calcular o
   piso de ruído (mesmas duas bandas) para A_joint e controle também, para
   completude, antes de considerar a Fase 1 totalmente fechada.
+
+## 2026-09-09 — Fase 1 concluída: piso de ruído consolidado dos três braços
+
+- **Piso de ruído por braço** (banda 1 / banda 2, desvio padrão e
+  amplitude max-min entre as 3 seeds, na época 150):
+  - B2: desvio 0,0078/0,0062, amplitude 0,0150/0,0121.
+  - A_joint: desvio 0,0103/0,0108, amplitude 0,0201/0,0192.
+  - controle: desvio 0,0099/0,0103, amplitude 0,0182/0,0186.
+- **Regra de leitura revisada**: o piso de ruído do B2 isolado (~1,5pp,
+  usado provisoriamente antes) subestima o ruído real dos braços do tipo
+  joint/composição, que é o que a Fase 3 vai comparar. A régua
+  conservadora correta, usando a maior amplitude observada entre os três
+  braços, é **~2,0 pp** (A_joint, banda 1). Um efeito medido na Fase 3
+  só deve ser tratado como real se superar essa margem -- substitui a
+  estimativa de 1,5pp registrada anteriormente.
+- **Fase 1 concluída** com todos os portões passados: determinismo
+  aprovado (comparação numérica exata de B2/seed42, duas execuções);
+  piso de ruído medido nos três braços, duas bandas cada;
+  `epoca_checkpoint=150` fechado como decisão definitiva do protocolo,
+  aplicável uniformemente aos três braços em todas as fases seguintes.
+- **Próxima fase do cronograma: Fase 2 (Estágio A)** -- rodar os
+  detectores já treinados nesta piloto sobre as 25.340 colagens de
+  sondagem geradas na tarefa 0.4 (Fase 0), gerar o alvo binário de
+  acerto/erro por caixa, construir a tabela de features, e treinar o
+  modelo substituto (gradient boosting) com SHAP.
