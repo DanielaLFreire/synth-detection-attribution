@@ -16,3 +16,11 @@ __all__ = [
     "construir_tabela_features",
     "construir_indice_crops",
 ]
+from .modelo import (
+    validar_por_grupo, treinar_modelo_final, criar_modelo,
+    FEATURES_PRINCIPAIS, ALVO, GRUPO, PISO_AUC_PR, ResultadoValidacao,
+)
+__all__ += [
+    "validar_por_grupo", "treinar_modelo_final", "criar_modelo",
+    "FEATURES_PRINCIPAIS", "ALVO", "GRUPO", "PISO_AUC_PR", "ResultadoValidacao",
+]

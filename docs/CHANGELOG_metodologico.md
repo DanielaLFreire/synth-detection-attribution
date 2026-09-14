@@ -1710,3 +1710,39 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Decisão: seguir para o GBM** com o conjunto de features retidas,
   validação cruzada por grupo (`grupo_geometrico_id`), AUC-PR como métrica
   do portão.
+
+## 2026-09-14 — Modelo substituto (GBM) com validação por grupo e portão pré-registrado
+
+- **Decisões fechadas ANTES de qualquer resultado** (confirmadas pelo
+  usuário): (1) 13 features de entrada (após remoção de
+  `coerencia_escala_pos`), `fonte` fora do modelo principal -- entra só
+  num segundo modelo para o teste de mediação de P3; (2) alvo =
+  `acerto_votacao`; (3) validação cruzada por GroupKFold sobre
+  `grupo_geometrico_id`, 5 folds; (4) **piso do portão: AUC-PR média
+  >= 0,78** (taxa base 0,702; exige ganho de ~8 pontos sobre o acaso).
+  Registrado como constante `PISO_AUC_PR` no código -- não ajustável
+  depois de ver o resultado.
+- **Entregue**: `src/attribution/modelo.py` -- `HistGradientBoostingClassifier`
+  com hiperparâmetros fixos e modestos (max_depth=4, min_samples_leaf=50,
+  regularização L2), deliberadamente conservador: o objetivo é um
+  substituto interpretável, não um classificador ótimo; hiperparâmetros
+  pequenos reduzem o risco de o SHAP refletir sobreajuste em vez de
+  estrutura.
+- **Teste de contraste incluído** (`test_alvo_aleatorio_nao_passa_o_portao`):
+  com alvo sem relação com as features, a AUC-PR fica perto da taxa base
+  e o portão REJEITA -- prova que o portão discrimina sinal de ruído, não
+  passa qualquer coisa.
+- **Lição registrada ao escrever o teste**: AUC-PR depende fortemente da
+  taxa base. Uma primeira versão do dado sintético tinha base 0,38 e o
+  piso absoluto 0,78 (calibrado para base 0,70) rejeitava um sinal
+  genuinamente forte. Corrigido calibrando o dado sintético para base
+  ~0,69, como o real. Confirma que o piso de 0,78 só faz sentido para a
+  taxa base real de 0,70 -- se a taxa base mudar (ex.: outro limiar de
+  confiança no alvo), o piso precisa ser re-derivado, não copiado.
+- Coberto por `tests/test_modelo.py` (6 testes, incluindo verificação de
+  que nenhum grupo aparece em mais de um fold de teste). Suíte completa:
+  **124/124**. `scikit-learn` e `pandas` adicionados ao requirements.
+- **Ação pendente para você rodar no Colab (CPU)**:
+  `scripts/validar_modelo_estagio_a.py`. Se o portão NÃO passar, o plano
+  (§9, Fase 2) manda revisar o alvo -- não forçar SHAP sobre um modelo
+  sem poder preditivo.
