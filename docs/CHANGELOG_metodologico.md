@@ -1637,3 +1637,40 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `estagio_a/alvo/alvo_iou0.5_conf0.25.csv` no Drive, com o score
   contínuo (`conf_media`) preservado para eventual reanálise com outro
   limiar sem refazer inferência.
+
+## 2026-09-14 — Tabela de features de CPU do Estágio A (Famílias 1, 2, 3)
+
+- **`src/attribution/features.py` mantido** (já existia, sem testes):
+  após leitura integral, avaliado como superior ao que seria escrito de
+  novo em três pontos -- `cobertura_mascara` recalculada direto do alpha
+  do PNG (sem join frágil por nome de arquivo com os manifestos de
+  extração); Laplaciano restrito a pixels cujos 4 vizinhos estão dentro
+  da máscara (elimina a "aresta falsa" transparente/opaco de forma mais
+  completa que descartar só a margem externa); `distorcao_aspect` com
+  sinal (preserva a direção da deformação). Nenhuma sobrescrita.
+- **Decisão registrada -- `pct_escala_alvo` omitida deliberadamente**:
+  como as caixas coladas são as próprias caixas reais do alvo, o percentil
+  da área dentro do perfil do alvo é uma transformação monotônica de
+  `area_caixa_norm`. Árvores de decisão (o GBM) são invariantes a
+  transformações monotônicas de uma feature -- seria a mesma informação
+  com outro nome. Não adiciona nada ao modelo substituto.
+- **Entregue**: `tests/test_features.py` (14 testes para o módulo
+  existente, incluindo `test_fundo_transparente_nao_contamina_medidas`,
+  que prova numericamente que o fundo transparente NÃO entra no
+  contraste nem na nitidez); `src/attribution/tabela.py`
+  (`construir_tabela_features`, com cache de intrínsecas por crop único --
+  as 25.340 colagens reutilizam crops do pool com reposição; e
+  `construir_indice_crops`, que localiza crops por nome-base já que o
+  caminho registrado no manifesto é o local da sessão de composição, que
+  não existe mais); `tests/test_tabela.py` (4 testes, incluindo prova de
+  que `coerencia_escala_pos` é idêntica dentro do mesmo grupo geométrico,
+  §5.1); `scripts/construir_tabela_features.py`.
+- **Regressão de coerência ajustada nas caixas reais do split de
+  VALIDAÇÃO** (o mesmo sobre o qual as colagens foram feitas), não do
+  treino -- coerente com a origem das caixas coladas.
+- Suíte completa: **118/118**.
+- **Ação pendente para você rodar no Colab (CPU)**: executar o script --
+  ainda não fiz isso. Além dos números de resumo, vou querer os
+  coeficientes da regressão de coerência (esperado: b > 0, "objetos mais
+  baixos no quadro tendem a ser maiores", relação de perspectiva) como
+  checagem de sanidade antes de treinar o GBM.
