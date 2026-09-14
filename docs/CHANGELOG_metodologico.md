@@ -1967,3 +1967,10 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Ação pendente para você rodar no Colab (GPU)**: o script. Depois,
   tudo é CPU: juntar as duas features à tabela por nome do crop, rerodar
   o modelo controlado + SHAP, e testar P2.
+- **Correção (2026-09-14, antes de qualquer GPU gasta)**: versões
+  recentes do `transformers` retornam um objeto de saída em
+  `get_image_features`, não um tensor. `_tensor_de_features()` extrai o
+  tensor em ambas as versões, preferindo `image_embeds` (espaço projetado
+  do CLIP, 512-d, o canônico). Testado contra 5 formas de retorno. A
+  `dim_embedding` já registrada no metadado revela qual representação
+  foi usada (512 = projetado; 768 = pré-projeção).

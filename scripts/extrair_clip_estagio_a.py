@@ -80,6 +80,25 @@ def _recortes_reais(pasta_imagens: Path, pasta_labels: Path) -> tuple[list[Image
     return recortes, ids
 
 
+def _tensor_de_features(saida):
+    """`get_image_features` retorna um tensor em versões antigas do
+    transformers e um objeto de saída em versões recentes. Extrai o
+    tensor em ambos os casos, preferindo o embedding PROJETADO (espaço
+    conjunto do CLIP, 512-d) quando disponível."""
+    import torch
+    if isinstance(saida, torch.Tensor):
+        return saida
+    for atributo in ("image_embeds", "pooler_output", "last_hidden_state"):
+        valor = getattr(saida, atributo, None)
+        if isinstance(valor, torch.Tensor):
+            if atributo == "last_hidden_state":
+                valor = valor[:, 0]  # token [CLS]
+            return valor
+    if isinstance(saida, (tuple, list)) and len(saida) > 0:
+        return saida[0]
+    raise TypeError(f"Não sei extrair o tensor de {type(saida)}")
+
+
 def _embutir(imagens: list, model, processor, device, batch: int = 256) -> np.ndarray:
     import torch
     saidas = []
@@ -87,7 +106,7 @@ def _embutir(imagens: list, model, processor, device, batch: int = 256) -> np.nd
         for i in range(0, len(imagens), batch):
             lote = [im if isinstance(im, Image.Image) else _carregar_rgb(im) for im in imagens[i:i + batch]]
             entradas = processor(images=lote, return_tensors="pt").to(device)
-            feats = model.get_image_features(**entradas)
+            feats = _tensor_de_features(model.get_image_features(**entradas))
             saidas.append(feats.float().cpu().numpy())
             if (i // batch) % 20 == 0:
                 print(f"     {min(i + batch, len(imagens))}/{len(imagens)}")
