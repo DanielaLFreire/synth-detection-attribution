@@ -1794,3 +1794,100 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   previsões P1-P4 pré-registradas -- ler contra
   `docs/pre_registro/previsoes_fase0.md`, não contra a intuição do
   momento.
+
+## 2026-09-14 — SHAP do Estágio A: P1 refutada pelo critério pré-registrado; geometria domina o alvo
+
+- **Ranking estável (30 reamostras por grupo)**: top-4 é inteiramente
+  Família 3 -- `area_caixa_norm` (pos. 1,13; 100% top-5),
+  `menor_lado_caixa_px` (1,97; 100%), `aspect_caixa` (3,73; 97%),
+  `pos_v` (3,33; 97%). Cluster `tamanho_caixa` = 0,928 de importância,
+  quase 4× o 2º colocado. `log_fator_reescala`: posição 9,4 ± 1,0, **0%
+  no top-5**.
+- **P1 (pré-registrada) REFUTADA para o Estágio A** pelo seu próprio
+  critério ("cair fora do top 8"): `fator_reescala` está fora do top 8 de
+  forma estável. Registrado sem suavização -- é para isso que o
+  pré-registro existe. (O 2º elemento de P1, `novidade_pool`, ainda não é
+  testável -- exige CLIP; o 3º, `coerencia_escala_pos`, já registrado
+  como degenerado neste domínio.)
+- **P4** (volume do pool não é preditor): não há feature de volume no
+  modelo -- satisfeita por construção nesta rodada, NÃO como confirmação
+  empírica. Registrado com honestidade.
+- **Achado metodológico central**: decomposição da variância do alvo --
+  **57,8% entre grupos** (geometria herdada da caixa real, idêntica entre
+  as 20 variações) vs. **42,2% dentro do grupo** (só pode vir do
+  crop/composição). 65,7% dos grupos são "intermediários" (qual crop é
+  colado muda o resultado); 24,3% sempre detectados e 10,0% nunca
+  (determinados pela geometria, independente do crop). O SHAP sobre o
+  alvo total está dominado pelos 58% geométricos, que abafam o sinal de
+  composição -- mas esse sinal existe (42%) e as features de crop mostram
+  direções coerentes e estáveis: `contraste` +0,92, `brilho_medio`
+  -0,88, `distorcao_aspect` -0,77, `log_fator_reescala` -0,48,
+  `crop_menor_lado_original_px` +0,56.
+- **`upsample` removida**: importância exatamente 0,0 -- é função
+  determinística do sinal de `log_fator_reescala` (upsample = fator > 1),
+  o GBM já tem essa informação. Redundância exata, como
+  `coerencia_escala_pos` e `pct_escala_alvo` antes.
+- **Decisão (§9, Fase 2: "revisar o alvo do modelo"; §5.1 antecipava a
+  estrutura)**: análise ADICIONAL com controle de geometria -- incluir
+  como feature a taxa de acerto leave-one-out das outras 19 variações do
+  mesmo grupo (nunca o rótulo da própria linha, para não vazar o alvo),
+  remover as features geométricas puras (absorvidas pela taxa do grupo),
+  e rodar GBM+SHAP+bootstrap sobre as features de CROP. Reportada
+  separadamente da P1 -- responde outra pergunta: dado que a caixa tem
+  detectabilidade própria, quais propriedades do crop deslocam o
+  resultado? NÃO é resgate de P1.
+- **Nota operacional**: o ambiente de trabalho local do assistente foi
+  reiniciado nesta data; repositório reclonado do GitHub (commit 25fe995)
+  sem perda -- confirma o valor de manter tudo commitado.
+
+## 2026-09-14 — Análise controlada por grupo: o efeito de escala é real, não-monotônico e assimétrico
+
+- **Entregue**: `src/attribution/controle_grupo.py` -- `adicionar_taxa_grupo_loo()`
+  (taxa de acerto das OUTRAS variações do mesmo grupo, leave-one-out) e
+  `features_controladas()` (covariável de grupo + 7 features de crop; sem
+  geometria pura, sem `upsample`). `tests/test_controle_grupo.py` (5
+  testes) inclui **prova por contraste de não-vazamento**: numa linha que
+  é a única diferente do seu grupo, a covariável aponta na direção OPOSTA
+  ao rótulo dela (anticorrelação dentro do grupo) -- só possível se o
+  próprio rótulo está excluído. Suíte: 135/135.
+- **Validação por grupo do modelo controlado**: AUC-PR 0,9624 (folds
+  0,955-0,966, dp 0,004), AUC-ROC 0,9273. Referência com SÓ a covariável
+  de grupo: AUC-PR 0,9410, AUC-ROC 0,9050. **Ganho atribuível às
+  features de crop: +0,021 AUC-PR, +0,022 AUC-ROC** -- modesto, mas
+  consistente entre folds. Implicação honesta: as 7 features de CPU
+  capturam só parte dos 42% de variância intra-grupo; boa parte do efeito
+  de composição permanece não explicado por elas (candidatos: aparência
+  semântica via CLIP, ou ruído irredutível do detector).
+- **Ranking SHAP controlado (entre as features de crop), com
+  estabilidade em 10 reamostras por grupo**: 1º `contraste` (+0,93; top-4
+  em 100%), 2º `crop_menor_lado_original_px` (+0,68; 100%), 3º/4º
+  `log_fator_reescala` e `brilho_medio` (50% cada), depois
+  `distorcao_aspect` (-0,67), `cobertura_mascara` (-0,54), `nitidez`
+  (+0,14, última). Nota: resolução NATIVA do crop importa (2º), a nitidez
+  medida por Laplaciano quase não -- a resolução de origem é o que
+  carrega a informação, não a textura de alta frequência em si.
+- **ACHADO CENTRAL -- dependência parcial de `log_fator_reescala` (SHAP
+  médio por faixa)**: curva em U invertido. Pico em log ∈ [-1, +0,5]
+  (fator 0,4-1,6, "escala casada"): SHAP +0,18 a +0,19. Cauda de redução
+  extrema (log < -3, fator < 0,05): -0,076. Cauda de AMPLIAÇÃO extrema
+  (log > +3, fator > 20): **-0,53**. O efeito de escala é real e tem o
+  formato que a tese previa -- mas a direção linear (-0,01) era cega a
+  ele, porque uma curva com pico no meio tem correlação linear zero por
+  construção. A operacionalização pré-registrada (log com sinal, ranking
+  linear no modelo total) não conseguia ver o mecanismo.
+- **Assimetria não prevista pela tese**: ampliar demais custa ~7× mais
+  que reduzir demais (-0,53 vs -0,076). Coerente com a física (reduzir
+  alta resolução preserva informação; ampliar crop minúsculo inventa
+  borrão) e com o padrão univariado por fonte (ABOShips, crops pequenos
+  ampliados, menor taxa; InaTechShips, crops enormes reduzidos, maior).
+- **Status frente ao pré-registro -- sem trapaça**: P1 permanece
+  REFUTADA como escrita; NÃO será redefinida retroativamente para
+  |log_fator|. O efeito não-monotônico é um achado EXPLORATÓRIO do
+  Estágio A, que -- pelo desenho em dois estágios -- vira hipótese a
+  confirmar causalmente no Estágio B. P5 (escala casada vs. descasada)
+  já está pré-registrada e é o teste confirmatório natural. Sugestão de
+  refinamento para P5, a decidir ANTES da Fase 3: separar "descasada por
+  redução" de "descasada por ampliação", que este resultado indica serem
+  condições muito diferentes.
+- Resultados salvos: `shap_controlado_estagio_a.json` (validação,
+  referência, ranking, dependência parcial, bootstrap).

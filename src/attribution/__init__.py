@@ -32,3 +32,5 @@ __all__ += [
     "calcular_shap", "ranking_importancia", "importancia_por_cluster",
     "estabilidade_bootstrap_por_grupo", "CLUSTERS_PADRAO", "EstabilidadeBootstrap",
 ]
+from .controle_grupo import adicionar_taxa_grupo_loo, features_controladas, FEATURES_CROP, COVARIAVEL_GRUPO
+__all__ += ["adicionar_taxa_grupo_loo", "features_controladas", "FEATURES_CROP", "COVARIAVEL_GRUPO"]
