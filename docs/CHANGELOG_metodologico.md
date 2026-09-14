@@ -1974,3 +1974,52 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   do CLIP, 512-d, o canônico). Testado contra 5 formas de retorno. A
   `dim_embedding` já registrada no metadado revela qual representação
   foi usada (512 = projetado; 768 = pré-projeção).
+
+## 2026-09-14 — Features CLIP extraídas; P2 confirmada (enquadramento original); novidade_pool refutada; CLIP sem ganho preditivo
+
+- **Extração concluída** (CLIP ViT-B/32, 512-d projetado): 85.941 crops
+  do pool + 1.267 objetos reais de val. **19 min de GPU** -- a estimativa
+  de "poucos minutos" errou por ~4×: a leitura dos 86 mil PNGs em CPU
+  dominou, como antecipado como possibilidade. Registrado como erro de
+  estimativa.
+- **Avisos "channel dimension is ambiguous"**: crops com um lado de
+  exatamente 3 px (ambíguo com o nº de canais); o processador assumiu
+  canal-primeiro, possivelmente transpondo a imagem. Estão abaixo do
+  filtro min_dim_px=20 -- nunca entraram em colagem alguma; afetam no
+  máximo o vizinho mais próximo de outros crops minúsculos no pool.
+  Sem impacto na tabela de sondagem; GPU não refeita.
+- **Fontes são "ilhas" no espaço CLIP**: 99,1% dos crops têm o vizinho
+  mais próximo na própria fonte (ABOShips 99,6%, SeaShips 97,7%).
+  Consequência direta da decisão like-with-like (retângulo com fundo): o
+  CLIP captura contexto de cena. `dist_clip_alvo` tem **64,5% da
+  variância entre fontes**; `novidade_pool` 66,9% dentro da fonte.
+  InaTechShips é a fonte MAIS distante do CITRA (0,361 vs ABOShips
+  0,123) e foi a de MAIOR taxa de detecção -- aparência de domínio aponta
+  na direção contrária à detectabilidade. Novidade bate com a natureza
+  dos datasets: vídeo (SMD 0,020, SeaShips 0,046) << fotos (InaTechShips
+  0,071).
+- **Join**: 25.340 linhas, 0 sem feature CLIP.
+- **Multicolinearidade (§5.5)**: `dist_clip_alvo` × `log_fator_reescala`
+  r=-0,76; × `crop_menor_lado_original_px` r=+0,71; × `novidade_pool`
+  +0,69. Pertence ao cluster escala/resolução. Ao entrar no modelo,
+  `crop_menor_lado_original_px` caiu de 0,198 para 0,091: importância
+  compartilhada, não nova.
+- **Ganho preditivo do CLIP no modelo controlado: AUC-PR -0,0003,
+  AUC-ROC -0,0003 -- zero.** A variância de composição não explicada
+  pelas 7 features de CPU também não é explicada por aparência
+  semântica; o resíduo é provavelmente ruído irredutível do detector.
+- **P2 (`dist_clip_alvo` fora do top 5)**: no modelo TOTAL (enquadramento
+  original do pré-registro), posição **14ª de 14 -- última**:
+  **CONFIRMADA**. No modelo controlado (análise adicional), 4,5 ± 1,5 --
+  a feature mais instável de todas (assinatura de colinearidade),
+  inconclusiva pela letra (dentro do top 5, fora do top 3). Conclusão
+  substantiva firme: semelhança de aparência com o domínio-alvo não
+  explica detectabilidade de forma independente.
+- **P1, 2º elemento (`novidade_pool` no top 3): REFUTADO** -- posição
+  9,7 ± 0,5 no controlado (penúltima), 12ª/14 no total, 0% no top-5.
+  Com isso, os três elementos de P1 estão resolvidos: fator_reescala
+  refutado (com mecanismo não-monotônico real), novidade_pool refutado,
+  coerencia_escala_pos degenerado neste domínio.
+- **Regra respeitada**: `docs/pre_registro/previsoes_fase0.md` está
+  lacrado por hash e NÃO foi editado. O confronto completo vai em
+  `docs/resultados_estagio_a.md`, documento separado.
