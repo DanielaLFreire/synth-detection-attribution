@@ -1938,3 +1938,32 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   Isso é o pré-registro funcionando: impede que a narrativa seja ajustada
   ao resultado, e o resultado real é mais interessante que o previsto.
 - Resultados salvos: `p3_mediacao_fonte.json`, `p3_mediacao_configuracoes.json`.
+
+## 2026-09-14 — Features CLIP (Família 4): matemática testada em CPU, passada única de GPU preparada
+
+- **Decisão de comparabilidade, verificada no código**: em
+  `aplicar_mascara_e_recortar`, `rgba = dstack([recorte_rgb, alpha])` --
+  o RGB dos crops salvos é o retângulo original COM fundo; só o alpha
+  codifica a máscara. Descartando o alpha, obtém-se o crop retangular
+  original, diretamente comparável a um recorte retangular de um objeto
+  real (que não tem máscara). Ambos são embutidos assim: like-with-like.
+  Consequência registrada: `dist_clip_alvo` mede similaridade de
+  aparência do objeto+contexto, não do objeto isolado.
+- **Entregue**: `src/attribution/clip_features.py` -- `dist_clip_alvo`
+  (1 - cosseno ao centroide normalizado dos objetos reais de val) e
+  `novidade_pool` (1 - cosseno ao vizinho mais próximo no pool, EXCLUINDO
+  o próprio crop, calculado em blocos porque 86k×86k não cabe em
+  memória). `tests/test_clip_features.py` (6 testes): prova que o próprio
+  crop é excluído do vizinho (senão todos teriam novidade 0) e que o
+  cálculo em blocos é idêntico ao direto. Suíte: 146/146.
+- **`scripts/extrair_clip_estagio_a.py`** -- a passada ÚNICA de GPU: CLIP
+  ViT-B/32 (`openai/clip-vit-base-patch32` via `transformers`, já
+  presente no Colab) sobre TODO o pool (~86 mil crops) e os ~1.267
+  objetos reais de val. Pool inteiro, não só os ~22 mil usados: (a) é a
+  definição fiel de `novidade_pool`; (b) o resultado serve ao eixo
+  "diversidade" do fatorial da Fase 3. Embeddings, índice, features por
+  crop (incl. fonte do vizinho mais próximo -- mede redundância entre
+  fontes) e metadados salvos no Drive. Feature math em CPU.
+- **Ação pendente para você rodar no Colab (GPU)**: o script. Depois,
+  tudo é CPU: juntar as duas features à tabela por nome do crop, rerodar
+  o modelo controlado + SHAP, e testar P2.
