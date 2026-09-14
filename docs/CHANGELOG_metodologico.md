@@ -1674,3 +1674,39 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   coeficientes da regressão de coerência (esperado: b > 0, "objetos mais
   baixos no quadro tendem a ser maiores", relação de perspectiva) como
   checagem de sanidade antes de treinar o GBM.
+
+## 2026-09-14 — Tabela de features construída: coerencia_escala_pos degenerada neste domínio
+
+- **Tabela construída**: 25.340 linhas × 48 colunas, 21.937 crops únicos
+  referenciados, 0 crops não localizados, nenhum NaN nas intrínsecas.
+- **Regressão de coerência**: a=-6,971, b=0,038 (1.267 caixas reais de
+  val). `b` positivo (direção esperada) mas desprezível: ao longo de todo o
+  quadro, a área esperada muda por fator de apenas e^0,038 ≈ 1,04.
+- **Causa de domínio, verificada**: `pos_v` das caixas reais concentrado
+  na linha do horizonte (mediana 0,53, quartis 0,49-0,60, desvio 0,13) --
+  câmera de vigilância costeira, sem gradiente vertical de perspectiva.
+  Não é defeito de cálculo; é a estrutura real do CITRA-3D-Real.
+- **Consequência**: correlação(`coerencia_escala_pos`, log área) =
+  **1,0000**. Sem gradiente, o resíduo é log(área) - constante --
+  transformação monotônica de `area_caixa_norm`, invisível para o GBM.
+  **Feature removida do conjunto do modelo** (redundância exata, mesmo
+  argumento já aplicado a `pct_escala_alvo`).
+- **Impacto sobre a previsão pré-registrada P1**: seu terceiro elemento
+  (coerência espacial) NÃO é testável como feature independente neste
+  domínio -- não por a hipótese estar errada, mas porque o alvo não tem a
+  estrutura de perspectiva que a feature pressupõe. Registrado como
+  achado, não como refutação. Expectativa concreta derivada para P7: no
+  UA-DETRAC (câmera de trânsito, perspectiva forte), `coerencia_escala_pos`
+  deve ter variância real e ser testável -- a hipótese de coerência
+  espacial fica adiada para o segundo domínio.
+- **Multicolinearidade preliminar (§5.5)**: único par acima de |r|=0,7
+  entre features retidas é `area_caixa_norm` × `menor_lado_caixa_px`
+  (r=0,82, duas medidas do tamanho da mesma caixa) -- tratado como um
+  cluster "tamanho_caixa" na leitura do SHAP. `log_fator_reescala` não é
+  colinear com nenhuma outra acima de 0,7: carrega informação própria.
+- **Taxa de acerto por fonte (univariada, sem controle -- registrada, não
+  interpretada)**: ABOShips 0,675, SMD 0,713, SeaShips 0,721,
+  InaTechShips 0,734. O GBM/SHAP é que dirá o que explica a diferença.
+- **Decisão: seguir para o GBM** com o conjunto de features retidas,
+  validação cruzada por grupo (`grupo_geometrico_id`), AUC-PR como métrica
+  do portão.
