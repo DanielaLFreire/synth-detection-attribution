@@ -1746,3 +1746,51 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `scripts/validar_modelo_estagio_a.py`. Se o portão NÃO passar, o plano
   (§9, Fase 2) manda revisar o alvo -- não forçar SHAP sobre um modelo
   sem poder preditivo.
+
+## 2026-09-14 — Portão do modelo substituto PASSOU: AUC-PR 0,857 (piso 0,78)
+
+- **Resultado** (25.340 linhas, 1.267 grupos, 5 folds por grupo):
+  AUC-PR por fold [0,850, 0,861, 0,871, 0,832, 0,870], média **0,8569**
+  (desvio 0,016), ganho de **+15,5 pontos** sobre a taxa base 0,702.
+  AUC-ROC média 0,7526.
+- **Portão pré-registrado (>= 0,78) passou com folga**, e de forma
+  consistente entre folds -- não é um fold sortudo.
+- **Leitura calibrada**: AUC-PR é inflada pela taxa base alta (70% de
+  positivos); o AUC-ROC de 0,75 (independente da base) indica
+  discriminação real mas moderada. Adequado para um substituto
+  interpretável -- sinal suficiente para o SHAP ler estrutura, sem
+  desempenho tão alto que sugerisse vazamento.
+- **Decisão: seguir para o SHAP** (ranking, direções, estabilidade por
+  bootstrap POR GRUPO, clusters de features colineares). CLIP (GPU) só
+  depois de ver o ranking, conforme combinado.
+- **Lembrete operacional** (já registrado em 2026-09-01): `shap` exige
+  numpy>=2 e `sam3` exige numpy<2 -- o SHAP deve rodar numa sessão do
+  Colab SEM o `sam3` instalado.
+
+## 2026-09-14 — Análise SHAP: ranking, clusters e estabilidade por bootstrap por grupo
+
+- **Entregue**: `src/attribution/shap_analise.py` -- (1) ranking por
+  |SHAP| médio com DIREÇÃO do efeito (correlação valor-da-feature ×
+  valor-SHAP); (2) agregação por cluster de features colineares (§5.5):
+  `tamanho_caixa` = {area_caixa_norm, menor_lado_caixa_px}, r=0,82, para
+  que duas medidas da mesma coisa não dividam entre si um sinal que,
+  somado, seria o dominante; (3) estabilidade por bootstrap reamostrando
+  GRUPOS geométricos com reposição (nunca linhas -- as 20 variações de
+  uma caixa não são independentes), retreinando e recalculando o
+  ranking a cada reamostra.
+- `shap.TreeExplainer` confirmado compatível com
+  `HistGradientBoostingClassifier` no ambiente antes de escrever o
+  módulo (shap 0.52, sklearn 1.8, numpy 2.4).
+- **Teste de recuperação de sinal plantado** (`test_feature_com_sinal_plantado_fica_em_primeiro`):
+  dado sintético com sinal em `log_fator_reescala` -> o SHAP a recupera
+  em 1º lugar, com importância > 2× a da 2ª, e ela permanece no top-3 em
+  >= 90% das reamostras de bootstrap. Prova que o pipeline SHAP recupera
+  estrutura conhecida antes de ser aplicado a dado real.
+- Coberto por `tests/test_shap_analise.py` (6 testes, incluindo prova de
+  que a reamostragem é por grupo, não por linha). Suíte completa:
+  **130/130**. `shap` adicionado ao requirements.
+- **Ação pendente para você rodar no Colab (CPU, sessão SEM sam3)**:
+  `scripts/analisar_shap_estagio_a.py`. O resultado é o que confronta as
+  previsões P1-P4 pré-registradas -- ler contra
+  `docs/pre_registro/previsoes_fase0.md`, não contra a intuição do
+  momento.

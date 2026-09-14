@@ -24,3 +24,11 @@ __all__ += [
     "validar_por_grupo", "treinar_modelo_final", "criar_modelo",
     "FEATURES_PRINCIPAIS", "ALVO", "GRUPO", "PISO_AUC_PR", "ResultadoValidacao",
 ]
+from .shap_analise import (
+    calcular_shap, ranking_importancia, importancia_por_cluster,
+    estabilidade_bootstrap_por_grupo, CLUSTERS_PADRAO, EstabilidadeBootstrap,
+)
+__all__ += [
+    "calcular_shap", "ranking_importancia", "importancia_por_cluster",
+    "estabilidade_bootstrap_por_grupo", "CLUSTERS_PADRAO", "EstabilidadeBootstrap",
+]
