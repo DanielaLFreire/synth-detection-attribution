@@ -1477,3 +1477,59 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   menores não são distinguíveis de flutuação de seed neste protocolo.
 - **Próximo passo**: rodar A_joint e controle × 3 seeds cada (6 execuções
   restantes do piloto), com o script já corrigido para salvar no Drive.
+
+## 2026-09-09 — Piloto da Fase 1 completo: as 9 execuções verificadas
+
+- **Verificação rigorosa aplicada**: em vez de checar apenas a existência
+  de `results.csv` (checagem anterior, insuficiente -- um treino
+  interrompido no meio também gera um `results.csv`, só que parcial), a
+  verificação final conferiu explicitamente a última época registrada em
+  cada arquivo e a presença de `weights/last.pt`/`weights/best.pt`.
+- **Resultado**: as 9 execuções (B2, A_joint, controle × seeds 42, 123,
+  2024) completaram as 150 épocas integralmente, com pesos finais
+  presentes. Nenhuma execução parcial remanescente.
+- **Piloto da Fase 1 tecnicamente completo.** Próximo passo: análise das
+  curvas de validação (recall por época) dos três braços, para (1)
+  confirmar ou refutar o padrão de pico-precoce-e-degradação previsto
+  para os braços com repetição/sintético, (2) decidir o `epoca_checkpoint`
+  real do protocolo (substituindo o placeholder), e (3) calcular o piso
+  de ruído dos outros dois braços (A_joint, controle), não só do B2.
+
+## 2026-09-09 — Decisão fechada: epoca_checkpoint = 150 (todos os braços)
+
+- **Análise das 9 curvas de validação (B2, A_joint, controle × 3 seeds)**:
+  confirma o mecanismo previsto (braços com mais imagens/época convergem
+  muito mais rápido -- A_joint pico em 21-39, controle em 55-84, B2 só em
+  108-141) e o padrão de pico-e-degradação (A_joint cai 2-4pp do pico até
+  a época 150; controle cai 1,5-2pp; B2 cai apenas 1-1,7pp).
+- **Achado que exige cautela, não conclusão precipitada**: `controle`
+  (real repetido, sem sintético) supera `A_joint` (com sintético) no pico
+  e na época final, nas três seeds. Isso NÃO é evidência de que
+  composição sintética piora o resultado -- esta piloto usa o pool
+  inteiro sem separar por condição de escala (tarefa 0.3 já mediu que a
+  maioria dos pareamentos do pool cai em "escala descasada": SMD 58,9%,
+  SeaShips 70,2%, ABOShips 32,0-46,6%, InaTechShips 99,0%). O `A_joint`
+  desta piloto testa majoritariamente a condição já suspeita de ser
+  desfavorável, diluída numa média -- exatamente o que o fatorial da
+  Fase 3 existe para desembaraçar. Nenhuma conclusão sobre o valor da
+  composição sintética deve ser tirada desta piloto.
+- **Decisão fechada**: `epoca_checkpoint = 150` (época final do
+  cronograma, epochs_total), a MESMA para os três braços. Justificativa:
+  qualquer época intermediária "otimizada por braço" reintroduziria
+  seleção de checkpoint informada por comportamento de validação,
+  favorecendo estruturalmente os braços que convergem tarde (B2) -- a
+  época final é a única opção que não exige nenhuma escolha ad-hoc por
+  braço, e a degradação que ela captura nos braços com sintético é parte
+  real do fenômeno em estudo, não algo a esconder escolhendo um "ponto
+  bonito" no meio do caminho.
+- **Implicação operacional direta**: a partir de agora, toda análise
+  formal de resultado usa `weights/last.pt` (pesos da época 150) de cada
+  execução -- nunca `weights/best.pt` (seleção automática do Ultralytics
+  por critério de fitness informado por validação, que o protocolo V2
+  já proíbe usar como base de decisão, §3 do plano).
+- **Piso de ruído do B2 (já calculado)** permanece válido como régua de
+  referência (banda 1: 1,50pp; banda 2: 1,21pp) -- calculado exatamente
+  na época 150, coerente com a decisão agora fechada.
+- **Isso encerra a análise central da Fase 1.** Pendente: calcular o
+  piso de ruído (mesmas duas bandas) para A_joint e controle também, para
+  completude, antes de considerar a Fase 1 totalmente fechada.
