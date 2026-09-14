@@ -1891,3 +1891,50 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   condições muito diferentes.
 - Resultados salvos: `shap_controlado_estagio_a.json` (validação,
   referência, ranking, dependência parcial, bootstrap).
+
+## 2026-09-14 — P3 (mediação de fonte): não confirmada como escrita; tese subjacente fortemente sustentada por outro caminho
+
+- **Entregue**: `src/attribution/mediacao.py` -- `testar_mediacao_fonte()`
+  (fonte em one-hot, importância = soma das 4 colunas; compara modelo
+  sem/com mediadoras; critério pré-registrado de queda >= 70% como
+  constante `CRITERIO_QUEDA_P3`). `tests/test_mediacao.py` (5 testes),
+  incluindo dois cenários de contraste: fonte-como-proxy-de-escala ->
+  P3 confirma; fonte-com-efeito-próprio -> P3 não confirma. O teste
+  discrimina os dois mundos. Suíte: 140/140.
+- **Operacionalização registrada**: `folga_anotacao` (fração de fundo na
+  caixa) não existe com esse nome; `cobertura_mascara` é o seu
+  complemento (folga ≈ 1 - cobertura) e foi usada como mediadora de folga.
+- **Resultado principal (modelo controlado por grupo)**: importância de
+  fonte SEM mediadoras 0,0217; COM mediadoras 0,0202; queda 6,7%. Pela
+  letra do critério, **P3 NÃO confirmada**. Mas o antecedente de P3
+  ("se fonte aparecer com importância alta antes...") NÃO se cumpre
+  nessa configuração: fonte já era desprezível (13× menor que contraste)
+  -- o teste é vazio nessa forma.
+- **Análise por configurações crescentes** (para identificar o caminho
+  da mediação): (0) só grupo + fonte: **0,330** (fonte importa quando
+  nada de crop é medido -- antecedente cumprido); (1) + só mediadoras de
+  P3: 0,138, queda **58,2%** (abaixo dos 70%); (2) + só as OUTRAS 5
+  features de crop (contraste, resolução nativa, brilho, distorção,
+  nitidez): 0,022, queda **93,4%**; (3) + todas: 0,020, queda **93,9%**.
+- **Leitura em três camadas**: (i) P3 como pré-registrada: não
+  confirmada -- escala + folga explicam 58%, não >= 70%. (ii) Tese
+  subjacente ("fonte não tem efeito próprio; é proxy de propriedades
+  mensuráveis"): FORTEMENTE sustentada -- 94% da importância de fonte
+  desaparece com as propriedades do crop medidas. (iii) Mecanismo
+  diferente do previsto: a mediação passa principalmente por RESOLUÇÃO
+  NATIVA do crop e FOTOMETRIA (contraste, brilho), só secundariamente
+  por escala/folga. Na config (0), InaTechShips ajuda (+0,97; crops
+  enormes) e ABOShips atrapalha (-0,90; 38% dos crops com menor lado
+  <20px, Fase 0); SMD/SeaShips ~nulos.
+- **Coerência entre análises independentes**: converge com o SHAP
+  controlado (contraste e resolução nativa nos dois primeiros lugares em
+  100% das reamostras). Os determinantes dominantes de detectabilidade
+  no nível do crop são resolução nativa e fotometria; o descasamento de
+  escala importa (não-monotonicamente) mas em segundo plano.
+- **Implicação para o artigo**: P1 e P3, ambas "não confirmadas" pela
+  letra, contam a MESMA história quando lidas com honestidade -- a
+  hipótese de escala era direcionalmente certa mas superestimada; a
+  hipótese de proxy era certa mas o proxy passa por outras propriedades.
+  Isso é o pré-registro funcionando: impede que a narrativa seja ajustada
+  ao resultado, e o resultado real é mais interessante que o previsto.
+- Resultados salvos: `p3_mediacao_fonte.json`, `p3_mediacao_configuracoes.json`.

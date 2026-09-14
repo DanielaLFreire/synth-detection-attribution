@@ -34,3 +34,5 @@ __all__ += [
 ]
 from .controle_grupo import adicionar_taxa_grupo_loo, features_controladas, FEATURES_CROP, COVARIAVEL_GRUPO
 __all__ += ["adicionar_taxa_grupo_loo", "features_controladas", "FEATURES_CROP", "COVARIAVEL_GRUPO"]
+from .mediacao import testar_mediacao_fonte, codificar_fonte_one_hot, MEDIADORAS, CRITERIO_QUEDA_P3, ResultadoMediacao
+__all__ += ["testar_mediacao_fonte", "codificar_fonte_one_hot", "MEDIADORAS", "CRITERIO_QUEDA_P3", "ResultadoMediacao"]
