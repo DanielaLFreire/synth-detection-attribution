@@ -1558,3 +1558,28 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   sondagem geradas na tarefa 0.4 (Fase 0), gerar o alvo binário de
   acerto/erro por caixa, construir a tabela de features, e treinar o
   modelo substituto (gradient boosting) com SHAP.
+
+## 2026-09-14 — Início da Fase 2 (Estágio A): decisão do gerador do alvo e script da passada única de GPU
+
+- **Decisão confirmada**: o alvo binário (acerto/erro por caixa colada,
+  IoU >= 0,5) é gerado pelos 3 checkpoints de **B2** (seeds 42, 123, 2024,
+  `weights/last.pt` = época 150), agregados por votação -- nunca por um
+  checkpoint único (§5.6 do plano). B2 e não A_joint: B2 foi treinado só
+  com dados reais e nunca viu uma colagem, então seu "acerto" mede
+  realismo/plausibilidade da composição sem circularidade. A_joint,
+  treinado nesse mesmo estilo de colagem, acertaria por familiaridade com
+  o estilo, não por qualidade -- risco de circularidade já registrado.
+- **Entregue**: `scripts/inferir_colagens_sondagem.py` -- a ÚNICA etapa
+  de GPU do Estágio A. Roda os 3 checkpoints sobre as 6.640 imagens de
+  sondagem com limiar de confiança mínimo (0,001), salvando TODAS as
+  detecções brutas (caixa + confiança) num CSV por checkpoint no Drive,
+  mais um `metadata_inferencia.json` registrando a configuração exata.
+  Desenho deliberado para gastar GPU uma única vez: qualquer decisão
+  posterior (limiar, IoU, votação) é feita em CPU sobre os dados salvos.
+- **Custo estimado de GPU**: ~20 mil inferências de YOLO11n em 640px --
+  poucos minutos no total. É a etapa mais barata em GPU de todo o
+  projeto até aqui.
+- Suíte completa: 93/93 (script de execução real, sem teste unitário --
+  mesmo padrão dos demais scripts dependentes de GPU).
+- **Ação pendente para você rodar no Colab**: executar o script -- ainda
+  não fiz isso, não tenho acesso ao Drive nem à GPU.
