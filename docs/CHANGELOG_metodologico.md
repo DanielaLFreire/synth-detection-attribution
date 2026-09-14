@@ -1617,3 +1617,23 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   número que decide se o alvo está balanceado o bastante para o GBM
   (§5.4 do plano prevê o cenário de desbalanceamento e a alternativa
   por aprendizagem em grupos, se necessário).
+
+## 2026-09-14 — Alvo binário do Estágio A construído: 70,2% de acerto por votação
+
+- **Resultado** (iou_min=0,5, conf_min=0,25, 25.340 caixas coladas):
+  taxa de acerto por seed 0,692 / 0,693 / 0,704; **por votação
+  majoritária: 0,702**. Alvo na faixa intermediária-alta -- informativo,
+  não degenerado. Desbalanceamento 70/30 leve, tratável (AUC-PR como
+  métrica do modelo substituto, §5.4).
+- **Consistência interna registrada (não conclusão causal)**: a taxa de
+  acerto sobre objetos COLADOS (~0,70) coincide com o recall do B2 sobre
+  objetos REAIS de validação (~0,69, Fase 1). O detector treinado só com
+  real reconhece composições com praticamente a mesma frequência que
+  reconhece o real -- coerente com a sanidade anterior (~4 detecções por
+  cena vs. ~3,8 objetos colados). Sugere plausibilidade visual média das
+  composições, sem afirmar nada sobre quais características a explicam
+  (isso é o que o GBM+SHAP vai testar).
+- **Decisão: seguir para a tabela de features.** Alvo salvo em
+  `estagio_a/alvo/alvo_iou0.5_conf0.25.csv` no Drive, com o score
+  contínuo (`conf_media`) preservado para eventual reanálise com outro
+  limiar sem refazer inferência.
