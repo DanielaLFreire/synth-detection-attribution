@@ -1583,3 +1583,37 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   mesmo padrão dos demais scripts dependentes de GPU).
 - **Ação pendente para você rodar no Colab**: executar o script -- ainda
   não fiz isso, não tenho acesso ao Drive nem à GPU.
+
+## 2026-09-14 — Inferência concluída e sanidade confirmada; módulo de construção do alvo entregue
+
+- **Inferência (única etapa de GPU do Estágio A) concluída**: 3
+  checkpoints de B2 sobre 6.640 imagens de sondagem, ~330s cada (~17 min
+  no total). 219.021 / 202.090 / 210.199 detecções brutas (conf >= 0,001)
+  para seeds 42 / 123 / 2024.
+- **Sanidade confirmada antes de construir o alvo** (decisão de não
+  seguir cegamente): em conf >= 0,25, média de **~4,06 detecções por
+  cena** nos três checkpoints -- coincide com os ~3,8 objetos colados por
+  cena conhecidos (1.267 caixas / 332 imagens de val). ~97% das cenas com
+  ao menos uma detecção. Três seeds altamente consistentes entre si
+  (26.067 / 25.993 / 26.443 detecções em 0,25). Nenhum sinal de alvo
+  degenerado; vale seguir.
+- **Entregue**: `src/attribution/alvo.py` -- `construir_alvo()` casa cada
+  caixa colada (manifesto) com as detecções da mesma cena via IoU
+  (reaproveita `_calcular_iou` já testada), registrando por seed a MAIOR
+  confiança casada (score contínuo) e o acerto binário no limiar; agrega
+  entre seeds por votação majoritária (`acerto_votacao`) e por média de
+  confiança (`conf_media`), as duas formas previstas em §5.6. Preserva
+  todas as colunas do manifesto (as features do Estágio A). Limiar e IoU
+  são parâmetros -- decisões reversíveis em CPU.
+- `scripts/construir_alvo_estagio_a.py` roda contra os dados reais do
+  Drive (padrão: iou_min=0,5, conf_min=0,25) e salva a tabela de alvo +
+  resumo das taxas de acerto.
+- Coberto por `tests/test_alvo.py` (7 testes: IoU alto/conf alta,
+  detecção longe, IoU alto/conf baixa, votação majoritária, votação
+  minoritária, isolamento por cena, preservação de colunas). Suíte
+  completa: **100/100**.
+- **Ação pendente para você rodar no Colab (CPU)**: executar
+  `construir_alvo_estagio_a.py` e reportar as taxas de acerto -- é o
+  número que decide se o alvo está balanceado o bastante para o GBM
+  (§5.4 do plano prevê o cenário de desbalanceamento e a alternativa
+  por aprendizagem em grupos, se necessário).
