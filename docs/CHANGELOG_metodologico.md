@@ -2023,3 +2023,45 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Regra respeitada**: `docs/pre_registro/previsoes_fase0.md` está
   lacrado por hash e NÃO foi editado. O confronto completo vai em
   `docs/resultados_estagio_a.md`, documento separado.
+
+## 2026-09-14 — Fase 3 redesenhada: adendo pré-registrado em rascunho (lacração pendente de decisão de orçamento)
+
+- **Restrição estrutural identificada antes de desenhar**: com geometria
+  fixa entre células (obrigatória -- explica 58% da variância), resolução
+  nativa e fator de reescala são o MESMO eixo (fator = caixa / nativo).
+  "Alta resolução + ampliação" é fisicamente impossível. A emenda
+  "adicionar eixo de resolução nativa" colapsa na emenda "refinar escala em
+  3 níveis": `reduzida` = alta resolução reduzida; `ampliada` = baixa
+  resolução ampliada. Os dois achados do Estágio A eram o mesmo fenômeno.
+- **Segundo fator real: contraste do crop** (1º entre as de crop em 100%
+  das reamostras; r = +0,35 com tamanho nativo -- separável; todas as
+  fontes com massa dos dois lados da mediana, SeaShips a menor com 27%).
+- **Desenho**: fatorial completo 3 (escala: casada [0,5-2,0] / reduzida
+  < 0,5 / ampliada > 2,0) × 2 (contraste alto/baixo pela mediana do pool
+  elegível) = 6 células + controle real-sobreamostrado. Mesmas caixas de
+  treino em todas as células; caixas inviáveis em qualquer célula
+  excluídas de todas. Nenhuma interação confundida.
+- **InaTechShips excluído do fatorial inteiro**: 0,8% `casada`, 0,2%
+  `ampliada` -- incompatível com 2 de 3 níveis; manter proporção de fonte
+  constante (§5.7) exige as mesmas 3 fontes (SMD, SeaShips, ABOShips, 1/3
+  cada) em todas as células. P6 refinada em "efeitos robustos fonte a
+  fonte".
+- **Previsões novas/refinadas**: P5a (ampliada é o pior nível, > 2,0 pp),
+  P5b (casada >= reduzida, direção só), P8 (contraste alto > baixo, > 2,0
+  pp), P9 (interação, exploratória), P10 (alguma célula supera o controle?
+  -- registrada como questão, não previsão, para impedir leitura post-hoc).
+  Árvore de hipóteses e famílias de Holm-Bonferroni declaradas.
+- **Entregue**: `docs/pre_registro/adendo_fase3_fatorial.md` (rascunho),
+  `scripts/lacrar_adendo.py` (acrescenta ao hashes.json sem tocar nas
+  entradas existentes; registra hash cruzado de previsoes_fase0.md;
+  RECUSA lacrar com decisão pendente ou re-lacração), `tests/test_lacrar_adendo.py`
+  (4 testes). Suíte: 150/150.
+- **Decisão pendente (orçamento, do usuário)**: `n_variacoes` ∈ {1, 2, 3}
+  -> ~17 / ~33 / ~49 h de GPU. Proposta: 2. O adendo NÃO pode ser lacrado
+  até isso ser fixado -- verificado pelo script.
+- **Decisão fixada (usuário, 2026-09-14): `n_variacoes = 2`** (~33 h de
+  GPU, 2.696 sintéticas por célula). Adendo finalizado, sem marcadores
+  pendentes; script de lacração aceita (ensaiado em cópia, hash de
+  referência `9fb7a139...`). A lacração REAL é feita pelo usuário no
+  repositório, seguida do commit público -- a ordem "lacrar -> commitar"
+  é o que constitui a prova.
