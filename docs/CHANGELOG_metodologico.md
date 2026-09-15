@@ -2065,3 +2065,21 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   referência `9fb7a139...`). A lacração REAL é feita pelo usuário no
   repositório, seguida do commit público -- a ordem "lacrar -> commitar"
   é o que constitui a prova.
+
+## 2026-09-14 — Lacração do adendo: commit de conteúdo feito; índice em hashes.json em commit de complemento
+
+- **Commit de lacração do conteúdo**: `efd46997735509be668afcd591863f8df5df8e92`
+  (2026-09-14T21:45:34-03:00). SHA-256 do adendo commitado:
+  `9fb7a139df119274c62bfee26f23d7ffc91c5e357660ef1276bfc0c503bb58ec` --
+  idêntico ao hash de referência do ensaio. **Esta é a prova de
+  lacração**: o git endereça o conteúdo por hash, o commit é público e
+  datado, e nenhum treino da Fase 3 começou antes dele.
+- **O que faltou**: a entrada correspondente em `hashes.json` (passo 2 do
+  procedimento). Causa: `scripts/lacrar_adendo.py` e
+  `tests/test_lacrar_adendo.py` não estavam no repositório (ficaram só
+  num zip de entrega anterior). Não há alteração de conteúdo do adendo.
+- **Correção**: script e teste adicionados ao repositório; `hashes.json`
+  recebe a entrada do adendo num commit de COMPLEMENTO, que apenas indexa
+  o hash já provado pelo commit `efd4699`. Registrado explicitamente para
+  que a cronologia fique transparente: conteúdo lacrado em `efd4699`;
+  índice acrescentado depois, antes de qualquer treino.
