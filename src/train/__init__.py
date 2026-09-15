@@ -21,3 +21,7 @@ __all__ = [
     "construir_trainlist_real_sobreamostrado",
     "ContagemTrainlist",
 ]
+from .executar import Execucao, execucao_concluida, execucoes_pendentes, copiar_resultados_para_drive, treinar_execucao
+__all__ = list(globals().get("__all__", [])) + [
+    "Execucao", "execucao_concluida", "execucoes_pendentes", "copiar_resultados_para_drive", "treinar_execucao",
+]

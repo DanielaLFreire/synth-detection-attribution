@@ -2258,3 +2258,48 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   de fonte; distribuição de fator_reescala) e que o conjunto de caixas
   coladas é IDÊNTICO entre células e igual ao pré-registrado. Zip por
   célula + manifesto + metadata no Drive.
+
+## 2026-09-15 — Células do fatorial 2×2 construídas e verificadas
+
+- **4 células geradas** (seeds 3101-3104, n_variacoes=2): 7.974 colagens
+  cada (3.987 caixas × 2), **0 erros de nível de escala e 0 de
+  contraste** em todas; conjunto de caixas coladas IDÊNTICO entre
+  células e igual ao pré-registrado; proporção de fonte 0,322-0,341.
+- **Distribuição de `fator_reescala` (adendo 2 §2)**: `casada` mediana
+  0,81-0,85, p05 0,52, p95 1,75-1,82 (dentro de [0,5, 2,0] por
+  construção); `reduzida` mediana 0,15-0,19, p05 **0,014-0,021** (crop
+  50-70× a área da caixa), p95 0,45-0,46. `reduzida` agrupa reduções
+  moderadas e extremas -- heterogeneidade registrada; análise secundária
+  pré-registrada (F3) olha a distribuição.
+- **Justificativa do override `permitir_split_treino=True`** (o
+  compositor exige registro): as células são DADOS DE TREINO -- compor
+  sobre o split de treino é o desenho correto. A proibição existe para
+  as colagens de SONDAGEM do Estágio A (memorização de cena pelo detector
+  rotulador), que não se aplica aqui.
+- Artefatos no Drive: `fase3/celulas/{célula}.zip` (imagens+labels),
+  `manifesto_{célula}.csv`, `metadata_{célula}.json`, `resumo_celulas_fase3.json`.
+
+## 2026-09-15 — Fase 3: preparação de dados e executor de treino retomável
+
+- **`src/train/executar.py`** -- executor reaproveitável (Fase 3 e 4):
+  `execucao_concluida()` exige `results.csv` com exatamente
+  `epochs_total` linhas, última época igual a `epochs_total`, E
+  `weights/last.pt` (a checagem rigorosa da Fase 1, agora em código);
+  `execucoes_pendentes()`; `copiar_resultados_para_drive()` ao final de
+  CADA execução; `treinar_execucao()` com o protocolo V2. `tests/test_executar.py`
+  (7 testes: parcial, sem last.pt, época final errada, pasta inexistente
+  -> não concluída). Suíte: **176/176**.
+- **`scripts/preparar_dados_locais_fase3.py`** (CPU): real train/val
+  locais, extração das 4 células, trainlists (célula = real × 2 +
+  sintéticas da célula, ~51/49; controle = real × 2), data.yaml por
+  braço, e **`contagens.json`** com imagens/época por braço -- lido pelo
+  treino, nunca codificado à mão (lição do `N_IMAGENS_EPOCA` do piloto).
+- **`scripts/treinar_fase3.py`** (GPU): 15 execuções planejadas (4
+  células + controle) × seeds 42/123/2024, em ORDEM FIXA seed-externa /
+  braço-interno -- a cada 5 execuções, todos os braços têm a mesma seed
+  completa (uma réplica inteira analisável mesmo se o orçamento parar no
+  meio). `main()` roda só as pendentes; `listar()` mostra o estado;
+  `max_execucoes` permite dosar por sessão. Cada execução é verificada
+  ao terminar (assert) antes de seguir.
+- Orçamento: ~1,5 h/execução (5.288 imgs/época nas células, 2.696 no
+  controle) -> ~23 h no total, em quantas sessões forem necessárias.
