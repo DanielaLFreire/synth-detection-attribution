@@ -2166,3 +2166,34 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   com `niveis_escala`/`sufixo`, para avaliar o desenho 2×2
   (casada/reduzida × contraste) sobre a população completa em segundos
   (contraste cacheado). Teste adicionado; suíte 160/160.
+
+## 2026-09-15 — Verificação 2×2 sustenta-se; CORREÇÃO de referencial na comparação de geometria (erro do assistente)
+
+- **2×2 (casada/reduzida × contraste), população completa**: min1 -> 4.040
+  caixas viáveis (90,0%), 1.313 imagens, gargalos de crop único em
+  `reduzida` (SeaShips=1, SMD=1). **min2 -> 3.987 (88,8%), 1.296 imagens,
+  sem gargalo abaixo de 3** (pior: casada__alto SMD=3). Custo de min2
+  sobre min1: 53 caixas (1,2%). **Adotado min2.** Excluídas: as caixas
+  minúsculas (mediana 255 px² nativos ≈ 16 px de lado, abaixo dos 18 px
+  que `casada` exige com crops >= 20 px) -- exclusão na cauda inferior.
+- **ERRO CORRIGIDO (do assistente)**: `comparar_geometria` aplicava o
+  limiar COCO small (32² = 1.024 px²) sobre a ÁREA NATIVA da imagem; o
+  perfil da Fase 0 (82,2% small) é no referencial LETTERBOX 640, o que o
+  detector vê. Uma caixa de 4.508 px² nativos (mediana das viáveis do
+  3×2) tem ~22 px de lado a 640 -- É small no referencial certo. A
+  afirmação anterior "nenhuma caixa small sobreviveu ao 3×2" estava
+  EXAGERADA por mistura de referenciais. O que o 3×2 excluiu foram as
+  caixas abaixo de ~12 px a 640 (~37 px nativos): ~40% do conjunto, as
+  menores. A conclusão qualitativa (3×2 corta uma fatia grande e
+  sistematicamente pequena do regime do alvo; 2×2 corta só a cauda de
+  ~5-6 px a 640) se mantém; os NÚMEROS precisam ser refeitos no
+  referencial correto antes do adendo 2.
+- Correção: `CaixaAlvo.area_640_px` + `area_letterbox_640()` (mesmo método
+  do perfil da Fase 0: fator = 640 / max(W, H)); `comparar_geometria`
+  reporta `fracao_small_640` e `lado_mediano_640`, e devolve None (nunca
+  um número inventado) se o referencial 640 não estiver disponível.
+  Testes: 13 no módulo, incluindo prova de que 4.508 px² nativos em
+  1920×1080 conta como small. Suíte: 162/162.
+- **Ação**: rerodar o verificador (segundos, contraste cacheado) para o
+  3×2 e para o 2×2 min2 com a geometria no referencial correto; só então
+  redigir o adendo 2.

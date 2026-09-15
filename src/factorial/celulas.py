@@ -45,7 +45,15 @@ class CropElegivel:
 class CaixaAlvo:
     imagem_id: str
     box_index: int
-    area_px: float
+    area_px: float          # pixels NATIVOS da imagem -- usado para fator_reescala
+    area_640_px: float | None = None  # referencial letterbox 640 (o que o detector vê) -- usado para geometria
+
+
+def area_letterbox_640(area_nativa: float, largura_img: int, altura_img: int, lado: int = 640) -> float:
+    """Converte área nativa para o referencial letterbox de `lado` px (mesmo
+    método do perfil da Fase 0): fator = lado / max(W, H), área × fator²."""
+    fator = lado / max(largura_img, altura_img, 1)
+    return area_nativa * fator * fator
 
 
 def nivel_escala(fator_reescala: float) -> str:
@@ -165,10 +173,21 @@ def verificar_viabilidade(
 
 def comparar_geometria(viaveis: list[CaixaAlvo], excluidas: list[CaixaAlvo], limiar_small_px2: float = 32 * 32) -> dict:
     """Detecta exclusão sistemática: compara área mediana e fração 'small'
-    (COCO: área < 32²) entre caixas mantidas e excluídas."""
+    (COCO: área < 32²) entre caixas mantidas e excluídas -- NO REFERENCIAL
+    LETTERBOX 640 (o do detector e do perfil da Fase 0), quando disponível.
+    CORREÇÃO 2026-09-15: a versão anterior usava a área nativa contra o
+    limiar de 32², misturando referenciais (a fração small saía errada)."""
     def resumo(cs):
         if not cs:
-            return {"n": 0, "area_mediana": None, "fracao_small": None}
-        a = np.array([c.area_px for c in cs])
-        return {"n": int(len(a)), "area_mediana": float(np.median(a)), "fracao_small": float(np.mean(a < limiar_small_px2))}
-    return {"viaveis": resumo(viaveis), "excluidas": resumo(excluidas)}
+            return {"n": 0, "area_mediana_nativa": None, "area_mediana_640": None, "fracao_small_640": None}
+        nat = np.array([c.area_px for c in cs])
+        tem_640 = all(c.area_640_px is not None for c in cs)
+        a640 = np.array([c.area_640_px for c in cs]) if tem_640 else None
+        return {
+            "n": int(len(nat)),
+            "area_mediana_nativa": float(np.median(nat)),
+            "area_mediana_640": float(np.median(a640)) if tem_640 else None,
+            "lado_mediano_640": float(np.sqrt(np.median(a640))) if tem_640 else None,
+            "fracao_small_640": float(np.mean(a640 < limiar_small_px2)) if tem_640 else None,
+        }
+    return {"referencial": "letterbox_640", "viaveis": resumo(viaveis), "excluidas": resumo(excluidas)}

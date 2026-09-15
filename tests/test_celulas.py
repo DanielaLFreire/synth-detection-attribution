@@ -88,11 +88,20 @@ def test_mediana_calculada_do_pool_elegivel_ignora_fontes_fora():
 
 
 def test_comparar_geometria_detecta_exclusao_sistematica():
-    viaveis = [CaixaAlvo("a", i, 100.0) for i in range(5)]
-    excluidas = [CaixaAlvo("b", i, 5000.0) for i in range(5)]
+    """Referencial 640: 100 px² -> 10 px (small); 5000 px² -> 71 px (não small)."""
+    viaveis = [CaixaAlvo("a", i, 100.0, 100.0) for i in range(5)]
+    excluidas = [CaixaAlvo("b", i, 5000.0, 5000.0) for i in range(5)]
     g = comparar_geometria(viaveis, excluidas)
-    assert g["viaveis"]["fracao_small"] == 1.0
-    assert g["excluidas"]["fracao_small"] == 0.0
+    assert g["viaveis"]["fracao_small_640"] == 1.0
+    assert g["excluidas"]["fracao_small_640"] == 0.0
+
+
+def test_comparar_geometria_sem_area_640_nao_inventa_fracao():
+    """Sem o referencial 640 disponível, a fração small fica None -- nunca
+    calculada na área nativa (o erro corrigido em 2026-09-15)."""
+    g = comparar_geometria([CaixaAlvo("a", 0, 100.0)], [CaixaAlvo("b", 0, 5000.0)])
+    assert g["viaveis"]["fracao_small_640"] is None
+    assert g["viaveis"]["area_mediana_nativa"] == 100.0
 
 
 def test_niveis_escala_restritos_ignoram_ampliada():
@@ -106,3 +115,23 @@ def test_niveis_escala_restritos_ignoram_ampliada():
     assert not r3.caixas_viaveis
     assert len(r2.caixas_viaveis) == 1
     assert set(r2.viaveis_por_celula) == {"casada__alto", "casada__baixo", "reduzida__alto", "reduzida__baixo"}
+
+
+def test_area_letterbox_640_escala_pelo_maior_lado():
+    from src.factorial import area_letterbox_640
+    # imagem 1920x1080 -> fator 1/3 -> área /9
+    assert area_letterbox_640(900.0, 1920, 1080) == pytest.approx(100.0)
+    # imagem já 640 de largura -> inalterada
+    assert area_letterbox_640(500.0, 640, 480) == pytest.approx(500.0)
+
+
+def test_comparar_geometria_usa_referencial_640():
+    """4.508 px² nativos numa imagem 1920x1080 = ~22 px de lado a 640: small."""
+    from src.factorial import area_letterbox_640
+    viaveis = [CaixaAlvo("a", i, 4508.0, area_letterbox_640(4508.0, 1920, 1080)) for i in range(3)]
+    excluidas = [CaixaAlvo("b", i, 20000.0, area_letterbox_640(20000.0, 1920, 1080)) for i in range(3)]
+    g = comparar_geometria(viaveis, excluidas)
+    assert g["referencial"] == "letterbox_640"
+    assert g["viaveis"]["fracao_small_640"] == 1.0    # 22 px < 32 -> small no referencial certo
+    assert g["viaveis"]["lado_mediano_640"] == pytest.approx(22.4, abs=0.1)
+    assert g["excluidas"]["fracao_small_640"] == 0.0  # 47 px -> não small

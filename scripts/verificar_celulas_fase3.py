@@ -36,7 +36,7 @@ from PIL import Image
 from src.attribution.features import calcular_features_intrinsecas
 from src.compose.compose import ler_caixas_yolo
 from src.factorial import (
-    CropElegivel, CaixaAlvo, verificar_viabilidade, comparar_geometria, FONTES_ELEGIVEIS,
+    CropElegivel, CaixaAlvo, verificar_viabilidade, comparar_geometria, FONTES_ELEGIVEIS, area_letterbox_640,
 )
 
 RAIZ = "/content/drive/MyDrive/PROJETO_MARINHA/EXPERIMENTO_ATRIBUICAO_CAUSAL"
@@ -108,7 +108,8 @@ def _caixas_de_treino(pasta_imagens: Path, pasta_labels: Path) -> list[CaixaAlvo
         with Image.open(img) as im:
             W, H = im.size  # só o cabeçalho, sem decodificar
         for c in ler_caixas_yolo(label, W, H):
-            caixas.append(CaixaAlvo(label.stem, c.box_index, float(max(c.largura, 1) * max(c.altura, 1))))
+            area = float(max(c.largura, 1) * max(c.altura, 1))
+            caixas.append(CaixaAlvo(label.stem, c.box_index, area, area_letterbox_640(area, W, H)))
     return caixas
 
 
@@ -150,9 +151,10 @@ def main(
     print("   gargalo (menor nº de crops elegíveis para alguma caixa viável), por célula e fonte:")
     for cel, fs in r.gargalo_por_celula_fonte.items():
         print(f"     {cel:<20} " + "  ".join(f"{f}={n}" for f, n in fs.items()))
-    print("\n   geometria -- viáveis vs excluídas:")
-    print(f"     viáveis : n={geo['viaveis']['n']}, área mediana={geo['viaveis']['area_mediana']}, fração small={geo['viaveis']['fracao_small']}")
-    print(f"     excluídas: n={geo['excluidas']['n']}, área mediana={geo['excluidas']['area_mediana']}, fração small={geo['excluidas']['fracao_small']}")
+    print("\n   geometria -- viáveis vs excluídas (referencial letterbox 640, o do detector):")
+    for k in ("viaveis", "excluidas"):
+        g = geo[k]
+        print(f"     {k:<9}: n={g['n']}, lado mediano a 640={g['lado_mediano_640']:.1f} px, fração small(<32px)={g['fracao_small_640']:.3f}, área mediana nativa={g['area_mediana_nativa']:.0f}")
 
     imgs_viaveis = sorted({c.imagem_id for c in r.caixas_viaveis})
     config = {
@@ -178,8 +180,8 @@ def main(
     }
     (destino_drive / f"celulas_fase3{sufixo}.json").write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
     with open(destino_drive / f"caixas_viaveis_fase3{sufixo}.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f); w.writerow(["imagem_id", "box_index", "area_px"])
-        w.writerows([[c.imagem_id, c.box_index, f"{c.area_px:.0f}"] for c in r.caixas_viaveis])
+        w = csv.writer(f); w.writerow(["imagem_id", "box_index", "area_px", "area_640_px"])
+        w.writerows([[c.imagem_id, c.box_index, f"{c.area_px:.0f}", f"{c.area_640_px:.1f}"] for c in r.caixas_viaveis])
     print(f"\n✅ Salvo em {destino_drive}: celulas_fase3.json, caixas_viaveis_fase3.csv")
     print("   Copie celulas_fase3.json para configs/ no repositório e commite -- é o artefato do adendo §2.")
     return config
