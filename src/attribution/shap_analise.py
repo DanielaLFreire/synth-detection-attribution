@@ -21,7 +21,6 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-import shap
 
 from .modelo import criar_modelo, FEATURES_PRINCIPAIS, ALVO, GRUPO
 
@@ -32,6 +31,7 @@ CLUSTERS_PADRAO = {
 
 def calcular_shap(modelo, X: np.ndarray) -> np.ndarray:
     """Valores SHAP (n_amostras x n_features) da classe positiva."""
+    import shap  # import tardio: o pacote não deve exigir shap para construir alvo/tabela
     explainer = shap.TreeExplainer(modelo)
     sv = explainer.shap_values(X)
     sv = np.asarray(sv)

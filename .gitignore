@@ -37,3 +37,4 @@ Thumbs.db
 *.log
 tmp/
 scratch/
+.venv/

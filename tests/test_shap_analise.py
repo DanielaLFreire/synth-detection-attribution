@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
+
+pytest.importorskip("shap", reason="shap não instalado: pip install -r requirements.txt")
 
 from src.attribution.modelo import treinar_modelo_final, FEATURES_PRINCIPAIS
 from src.attribution.shap_analise import (

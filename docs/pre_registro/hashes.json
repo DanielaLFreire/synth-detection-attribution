@@ -25,5 +25,14 @@
       "sha256": "d472a7149676dcb46f8669e51c95660ebccac93e72928bc10f7d84084e51501e",
       "tamanho_bytes": 11093756
     }
+  },
+  "adendos": {
+    "adendo_fase3_fatorial.md": {
+      "lacrado_em_utc": "2026-09-15T01:23:20.714880+00:00",
+      "caminho": "docs/pre_registro/adendo_fase3_fatorial.md",
+      "sha256": "9fb7a139df119274c62bfee26f23d7ffc91c5e357660ef1276bfc0c503bb58ec",
+      "tamanho_bytes": 9082,
+      "sha256_previsoes_fase0_md_no_momento": "59010c49994420c52cafcc59af9d8b81d55e4aebe31685e2da7867f96c91afd7"
+    }
   }
 }

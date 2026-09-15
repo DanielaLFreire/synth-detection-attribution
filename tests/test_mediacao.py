@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("shap", reason="shap não instalado: pip install -r requirements.txt")
+
 from src.attribution import mediacao as med
 from src.attribution.mediacao import codificar_fonte_one_hot, CRITERIO_QUEDA_P3
 testar_mediacao_fonte = med.testar_mediacao_fonte

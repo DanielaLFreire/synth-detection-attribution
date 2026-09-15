@@ -2083,3 +2083,24 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   o hash já provado pelo commit `efd4699`. Registrado explicitamente para
   que a cronologia fique transparente: conteúdo lacrado em `efd4699`;
   índice acrescentado depois, antes de qualquer treino.
+
+## 2026-09-14 — Robustez do pacote: shap preguiçoso; alinhamento do Python local
+
+- **Fragilidade exposta ao rodar os testes localmente**: `src/attribution/__init__.py`
+  importava `shap` de forma antecipada, então construir o alvo ou a
+  tabela de features (que não usam SHAP) falhava sem `shap` instalado.
+  Corrigido: `import shap` movido para dentro de `calcular_shap()`
+  (import tardio). Provado por teste com `shap` bloqueado artificialmente:
+  `construir_alvo`, `construir_tabela_features` e `novidade_pool`
+  importam e funcionam sem ele.
+- Testes que dependem de shap (`test_shap_analise`, `test_mediacao`)
+  agora usam `pytest.importorskip("shap")` -- pulam com mensagem clara em
+  vez de quebrar a coleta de TODA a suíte.
+- `scripts/lacrar_adendo.py`: `Path.is_relative_to` (3.9+) substituído
+  por `relative_to` com try/except -- compatível com 3.8.
+- **Ambiente local do usuário está em Python 3.8.9** (fim de suporte em
+  2024-10; incompatível com as versões de shap/scikit-learn/pandas usadas
+  no Colab, Python 3.13). Recomendação registrada: `pyenv local 3.12` +
+  venv + `pip install -r requirements.txt`, para que os testes rodem no
+  mesmo stack em que o experimento executa. Rodar testes num ambiente
+  divergente do de execução esvazia o propósito de rodá-los.

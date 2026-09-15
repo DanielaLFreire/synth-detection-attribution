@@ -30,6 +30,13 @@ ORIGINAL = RAIZ / "docs" / "pre_registro" / "previsoes_fase0.md"
 MARCADORES_PENDENTES = ("DECISÃO PENDENTE", "___")
 
 
+def _caminho_relativo(caminho: Path) -> str:
+    try:
+        return str(caminho.resolve().relative_to(RAIZ))
+    except ValueError:
+        return str(caminho)
+
+
 def _sha256(caminho: Path) -> str:
     h = hashlib.sha256()
     with open(caminho, "rb") as f:
@@ -53,7 +60,7 @@ def lacrar_adendo(caminho_adendo: Path, hashes_json: Path = HASHES, original: Pa
 
     registro["adendos"][nome] = {
         "lacrado_em_utc": datetime.now(timezone.utc).isoformat(),
-        "caminho": str(caminho_adendo.relative_to(RAIZ)) if caminho_adendo.is_relative_to(RAIZ) else str(caminho_adendo),
+        "caminho": _caminho_relativo(caminho_adendo),
         "sha256": _sha256(caminho_adendo),
         "tamanho_bytes": caminho_adendo.stat().st_size,
         "sha256_previsoes_fase0_md_no_momento": _sha256(original) if original.exists() else None,
