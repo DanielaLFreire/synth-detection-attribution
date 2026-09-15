@@ -2197,3 +2197,27 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Ação**: rerodar o verificador (segundos, contraste cacheado) para o
   3×2 e para o 2×2 min2 com a geometria no referencial correto; só então
   redigir o adendo 2.
+
+## 2026-09-15 — Referencial corrigido: 2×2 min2 preserva o regime do alvo (82,3% small vs 82,2%). Adendo 2 redigido.
+
+- **3×2 (referencial 640)**: viáveis 2.711 (60,4%), lado mediano 22,4 px,
+  72,0% small; excluídas lado mediano **8,3 px**, 96,9% small -- exclui
+  os 40% menores objetos. Rejeição confirmada no referencial correto (a
+  narrativa mudou de "0% small" para "os 40% menores"; a decisão, não).
+- **2×2 min2 (referencial 640)**: viáveis **3.987 (88,8%)**, 1.296
+  imagens, lado mediano 16,0 px, **82,3% small -- idêntico ao alvo
+  (82,2%, Fase 0)**. Excluídas 502: lado mediano 5,3 px (cauda de ~5 px)
+  + algumas caixas gigantes sem crop `casada` em alguma fonte. Gargalo
+  mínimo 3 (casada__alto, SMD). **Desenho adotado.**
+- **Entregue**: `docs/pre_registro/adendo2_fase3_fatorial_2x2.md`
+  (supersede a estrutura fatorial do adendo 1; herda o resto; §1
+  documenta a rejeição do 3×2 com os números corretos e o erro de
+  referencial corrigido). P5b' vira hipótese primária de escala com
+  critérios em dois níveis (forte > 2,0 pp; fraca = direção); P5a
+  registrada como não testável; P8 mantida; ~23 h de GPU (vs ~33 h).
+- **Artefatos copiados para o repositório** (gerados por script, adendo
+  §3): `configs/celulas_fase3.json` (2×2 min2, ref. 640) e
+  `configs/caixas_viaveis_fase3.csv` (3.987 caixas).
+- Script de lacração aceita o adendo 2 (ensaio em cópia); hash de
+  referência registrado abaixo. Lacração real: pelo usuário, no
+  repositório, seguida do commit público.

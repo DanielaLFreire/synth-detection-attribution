@@ -1,0 +1,80 @@
+{
+  "gerado_em_utc": "2026-09-15T02:16:15.171368+00:00",
+  "gerado_por": "scripts/verificar_celulas_fase3.py (não editar à mão -- adendo §2)",
+  "adendo": "docs/pre_registro/adendo_fase3_fatorial.md (commit efd4699)",
+  "fontes_elegiveis": [
+    "SMD",
+    "SeaShips",
+    "ABOShips"
+  ],
+  "niveis_escala": [
+    "casada",
+    "reduzida"
+  ],
+  "min_dim_px": 20,
+  "faixa_casada_fator_reescala": [
+    0.5,
+    2.0
+  ],
+  "mediana_contraste": 40.891850000000005,
+  "minimo_por_fonte": 2,
+  "pool_por_fonte_contraste": {
+    "SMD__alto": 3179,
+    "SMD__baixo": 3500,
+    "SeaShips__alto": 2527,
+    "SeaShips__baixo": 6336,
+    "ABOShips__alto": 15007,
+    "ABOShips__baixo": 10877
+  },
+  "n_caixas_treino_total": 4489,
+  "n_caixas_viaveis": 3987,
+  "fracao_viavel": 0.8881710848741368,
+  "n_imagens_com_caixa_viavel": 1296,
+  "viaveis_por_celula": {
+    "casada__alto": 4092,
+    "casada__baixo": 4214,
+    "reduzida__alto": 4432,
+    "reduzida__baixo": 4381
+  },
+  "gargalo_por_celula_fonte": {
+    "casada__alto": {
+      "SMD": 3,
+      "SeaShips": 14,
+      "ABOShips": 622
+    },
+    "casada__baixo": {
+      "SMD": 37,
+      "SeaShips": 16,
+      "ABOShips": 562
+    },
+    "reduzida__alto": {
+      "SMD": 268,
+      "SeaShips": 63,
+      "ABOShips": 250
+    },
+    "reduzida__baixo": {
+      "SMD": 22,
+      "SeaShips": 127,
+      "ABOShips": 123
+    }
+  },
+  "geometria_viaveis_vs_excluidas": {
+    "referencial": "letterbox_640",
+    "viaveis": {
+      "n": 3987,
+      "area_mediana_nativa": 2314.0,
+      "area_mediana_640": 257.1111111111111,
+      "lado_mediano_640": 16.034684627740923,
+      "fracao_small_640": 0.8226736894908453
+    },
+    "excluidas": {
+      "n": 502,
+      "area_mediana_nativa": 255.0,
+      "area_mediana_640": 28.333333333333332,
+      "lado_mediano_640": 5.32290647422377,
+      "fracao_small_640": 0.7848605577689243
+    }
+  },
+  "n_variacoes": 2,
+  "n_sinteticas_por_celula_estimado": 2592
+}
