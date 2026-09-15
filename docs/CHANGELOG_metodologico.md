@@ -2221,3 +2221,40 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - Script de lacração aceita o adendo 2 (ensaio em cópia); hash de
   referência registrado abaixo. Lacração real: pelo usuário, no
   repositório, seguida do commit público.
+
+## 2026-09-15 — Adendo 2 LACRADO. Início da construção das células (CPU)
+
+- **Commit de lacração**: `a4ec7abdc35a9829f4333d68ceb91b5bf7b7a334`
+  (2026-09-14T23:21:38-03:00). SHA-256 do adendo 2:
+  `be395b8bbb017ed0f4aac98009934801f32a23625b4dbb653b94da6e215db7e9`,
+  idêntico ao ensaio. Adendo 1 (`9fb7a139...`) e artefatos originais
+  intactos. `configs/celulas_fase3.json` e `caixas_viaveis_fase3.csv`
+  commitados. Nenhum treino iniciado.
+
+## 2026-09-15 — Construção das células (tarefa 3.2, parte 2): seletor injetável no compositor
+
+- **`compor_dataset` estendido** com `seletor_de_crop(imagem_id, caixa, rng)`
+  opcional: retorna (fonte, caminho) ou None (= caixa fica REAL, com a
+  anotação real mantida no label -- nunca removida, seria falso negativo
+  de treino). Sem seletor, comportamento idêntico ao original (os 4
+  testes antigos do compositor passam inalterados). Metadata registra
+  `n_caixas_mantidas_reais` e `usa_seletor_de_crop`.
+- **`src/factorial/seletor.py`**: só as caixas PRÉ-REGISTRADAS
+  (`configs/caixas_viaveis_fase3.csv`) recebem colagem, em todas as
+  células -- garante "mesmas caixas" mesmo que uma caixa fosse viável
+  só em algumas. Entre as permitidas: fonte uniforme entre as 3 (1/3 em
+  expectativa), crop uniforme entre os elegíveis (escala pela área da
+  caixa, contraste da célula, fronteiras idênticas às da verificação).
+  Se uma caixa permitida não tiver `minimo_por_fonte` crops em alguma
+  fonte, ERRO explícito (`CaixaPermitidaSemCrop`) -- o pool mudou; não
+  silenciar. Determinístico dado o rng do compositor.
+- `tests/test_seletor.py` (6 testes): nível de escala e contraste
+  respeitados, balanceamento de fonte, erro claro, determinismo, e
+  INTEGRAÇÃO com o compositor (caixa não permitida fica real, metadata e
+  label corretos). Suíte: **169/169**.
+- **`scripts/gerar_celulas_fase3.py`** (CPU): 4 células, seeds fixas
+  3101-3104 (registradas), n_variacoes=2, min2. Verifica cada manifesto
+  contra o adendo (0 erros de nível de escala e de contraste; proporção
+  de fonte; distribuição de fator_reescala) e que o conjunto de caixas
+  coladas é IDÊNTICO entre células e igual ao pré-registrado. Zip por
+  célula + manifesto + metadata no Drive.

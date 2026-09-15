@@ -23,7 +23,7 @@ import random
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
 from PIL import Image
 
@@ -105,6 +105,7 @@ def compor_dataset(
     n_variacoes: int = 13,
     seed: int = 42,
     permitir_split_treino: bool = False,
+    seletor_de_crop: "Callable[[str, CaixaAlvo, random.Random], tuple[str, Path] | None] | None" = None,
 ) -> int:
     """Compõe um dataset sintético in-place sobre um split do dataset-alvo,
     gravando um manifesto por colagem. Retorna o número de colagens geradas.
@@ -119,6 +120,11 @@ def compor_dataset(
     split: rótulo do split sendo processado -- usado só para registro no
         manifesto e para a checagem de segurança abaixo.
     permitir_split_treino: ver docstring do módulo. Default False.
+    seletor_de_crop: opcional (Fase 3, adendo 2). Chamado com (imagem_id, caixa, rng)
+        para cada caixa; retorna (fonte, caminho_do_crop) ou None. None
+        significa "deixar a caixa REAL" (sem colagem; a anotação real é
+        mantida no label). Sem seletor, o comportamento é o original:
+        sorteio uniforme sobre pool_crops para toda caixa.
     """
     if split == "train" and not permitir_split_treino:
         raise SplitDeTreinoBloqueado(
@@ -149,6 +155,7 @@ def compor_dataset(
     saida_labels_dir.mkdir(parents=True, exist_ok=True)
 
     n_total = 0
+    n_mantidas_reais = 0
     with ManifestWriter(manifesto_csv) as manifesto:
         for caminho_img in sorted(Path(imagens_alvo_dir).glob("*.png")):
             imagem_id = caminho_img.stem
@@ -166,7 +173,14 @@ def compor_dataset(
                     for caixa in caixas:
                         seed_local = rng.randint(0, 2**31 - 1)
                         rng_local = random.Random(seed_local)
-                        fonte, caminho_crop = rng_local.choice(list(pool_crops))
+                        if seletor_de_crop is None:
+                            fonte, caminho_crop = rng_local.choice(list(pool_crops))
+                        else:
+                            escolha = seletor_de_crop(imagem_id, caixa, rng_local)
+                            if escolha is None:
+                                n_mantidas_reais += 1
+                                continue  # caixa fica real; label herdado abaixo a inclui
+                            fonte, caminho_crop = escolha
 
                         with Image.open(caminho_crop) as crop_original:
                             crop_original = crop_original.convert("RGBA")
@@ -228,6 +242,8 @@ def compor_dataset(
             "imagens_alvo_dir": str(imagens_alvo_dir),
             "labels_alvo_dir": str(labels_alvo_dir),
             "split": split,
+            "n_caixas_mantidas_reais": n_mantidas_reais,
+            "usa_seletor_de_crop": seletor_de_crop is not None,
             "n_variacoes": n_variacoes,
             "seed": seed,
             "metodo_interpolacao": METODO_INTERPOLACAO,
