@@ -93,3 +93,16 @@ def test_comparar_geometria_detecta_exclusao_sistematica():
     g = comparar_geometria(viaveis, excluidas)
     assert g["viaveis"]["fracao_small"] == 1.0
     assert g["excluidas"]["fracao_small"] == 0.0
+
+
+def test_niveis_escala_restritos_ignoram_ampliada():
+    """Caixa small (área 500): 'ampliada' exige crop < 250 px², inexistente
+    no pool (mínimo 10? não -- use pool sem crops pequenos). Com só
+    casada/reduzida a caixa vira viável."""
+    pool = [c for c in _pool_completo() if c.area_px >= 100]  # sem crops de área 10
+    caixa = CaixaAlvo("img", 0, 150.0)  # ampliada exigiria area_crop < 75: não há
+    r3 = verificar_viabilidade([caixa], pool, mediana_contraste=50.0)
+    r2 = verificar_viabilidade([caixa], pool, mediana_contraste=50.0, niveis_escala=["casada", "reduzida"])
+    assert not r3.caixas_viaveis
+    assert len(r2.caixas_viaveis) == 1
+    assert set(r2.viaveis_por_celula) == {"casada__alto", "casada__baixo", "reduzida__alto", "reduzida__baixo"}

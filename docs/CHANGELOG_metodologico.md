@@ -2132,3 +2132,37 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   "small" comparável). Se (b) falhar, a exclusão muda o perfil de escala
   do conjunto e precisa ser reportada como limitação -- ou o desenho
   revisto por novo adendo.
+
+## 2026-09-15 — Tarefa 3.2 executada: critério (b) FALHOU -- 'ampliada' é fisicamente impossível para caixas small. Treino NÃO iniciado.
+
+- **Resultado da verificação (3×2, adendo efd4699)**: pool elegível
+  41.426 crops (SMD 6.679, SeaShips 8.863, ABOShips 25.884); mediana de
+  contraste 40,892; 4.489 caixas de treino em 1.348 imagens. Viáveis em
+  todas as 6 células: 2.711 (60,4%). Gargalo: `ampliada` (2.766/3.033
+  viáveis vs ~4.400 nas demais).
+- **Critério (b) falhou**: caixas viáveis têm **0,0% small** (área
+  mediana 4.508 px²); excluídas têm **79,7% small** (mediana 624 px²).
+  Nenhuma caixa small sobreviveu. O CITRA-3D-Real é 82,2% small (Fase 0):
+  o fatorial treinaria composições só em caixas médias/grandes -- o oposto
+  do regime dominante do alvo. Suspeita a priori estava errada na
+  DIREÇÃO (esperava-se que `reduzida` excluísse as grandes).
+- **Mecanismo, quantificado no pool**: o filtro min_dim_px=20 impõe área
+  de crop >= 400 px² (pior caso entre fonte×contraste: 680, SMD alto).
+  `ampliada` (fator > 2 <=> area_crop < A/2) exige A > 1.360 px² (lado
+  > 37 px) -- acima do limiar small (32 px). Impossibilidade FÍSICA do
+  desenho, não falta de crops. `casada` exige A >= 340 (lado >= 18 px).
+- **Reinterpretação do Estágio A**: a "ampliação extrema" (fator > 20)
+  com crops >= 400 px² só ocorreu em caixas > 8.000 px² -- a penalidade
+  de -0,53 é um fenômeno de caixas GRANDES. Num alvo small com crops de
+  qualidade mínima, os únicos regimes reais são `casada` e `reduzida`.
+  Achado metodológico reportável por si.
+- **Gargalo de amostragem**: em células viáveis, alguns (célula, fonte)
+  têm 1 único crop elegível para alguma caixa (reduzida__baixo SMD=1;
+  reduzida__alto SeaShips=1) -- com n_variacoes=2, repetiria o crop.
+- **Decisão, conforme a regra pré-registrada**: NÃO treinar. O desenho 3×2
+  não se sustenta na população-alvo. Redesenho via NOVO adendo (o
+  efd4699 permanece lacrado e é citado como superado, com este motivo).
+- **Entregue**: `verificar_viabilidade(..., niveis_escala=...)` e o script
+  com `niveis_escala`/`sufixo`, para avaliar o desenho 2×2
+  (casada/reduzida × contraste) sobre a população completa em segundos
+  (contraste cacheado). Teste adicionado; suíte 160/160.

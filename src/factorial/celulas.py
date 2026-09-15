@@ -113,13 +113,18 @@ def verificar_viabilidade(
     pool: list[CropElegivel],
     mediana_contraste: float | None = None,
     minimo_por_fonte: int = 1,
+    niveis_escala: list[str] | None = None,
 ) -> ResultadoViabilidade:
+    """`niveis_escala` permite avaliar um desenho com menos níveis (ex.:
+    só casada/reduzida) -- adicionado em 2026-09-15 após a verificação
+    mostrar que 'ampliada' é fisicamente impossível para caixas small."""
+    niveis_escala = niveis_escala or NIVEIS_ESCALA
     elegiveis = [c for c in pool if c.fonte in FONTES_ELEGIVEIS]
     if mediana_contraste is None:
         mediana_contraste = float(np.median([c.contraste for c in elegiveis])) if elegiveis else 0.0
     indice = _indexar_pool(elegiveis, mediana_contraste)
 
-    celulas = [nome_celula(e, c) for e in NIVEIS_ESCALA for c in NIVEIS_CONTRASTE]
+    celulas = [nome_celula(e, c) for e in niveis_escala for c in NIVEIS_CONTRASTE]
     viaveis_por_celula = {cel: 0 for cel in celulas}
     gargalo = {cel: {f: None for f in FONTES_ELEGIVEIS} for cel in celulas}
 
@@ -127,7 +132,7 @@ def verificar_viabilidade(
     for caixa in caixas:
         viavel_em_todas = True
         contagens_caixa: dict[str, dict[str, int]] = {}
-        for e in NIVEIS_ESCALA:
+        for e in niveis_escala:
             for c in NIVEIS_CONTRASTE:
                 cel = nome_celula(e, c)
                 contagens = {f: contar_elegiveis(caixa.area_px, indice[(f, c)], e) for f in FONTES_ELEGIVEIS}

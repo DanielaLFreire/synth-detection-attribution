@@ -120,6 +120,8 @@ def main(
     destino_drive: str = DESTINO_DRIVE,
     cache_contraste: str = CACHE_CONTRASTE,
     minimo_por_fonte: int = 1,
+    niveis_escala: list[str] | None = None,
+    sufixo: str = "",
 ) -> dict:
     fontes = fontes or FONTES
     destino_local = Path(destino_local); destino_drive = Path(destino_drive)
@@ -136,7 +138,7 @@ def main(
     print(f"   {len(caixas)} caixas em {n_imgs} imagens\n")
 
     print(f"3) Viabilidade nas 6 células (mínimo {minimo_por_fonte} crop por fonte por célula)...")
-    r = verificar_viabilidade(caixas, pool, minimo_por_fonte=minimo_por_fonte)
+    r = verificar_viabilidade(caixas, pool, minimo_por_fonte=minimo_por_fonte, niveis_escala=niveis_escala)
     geo = comparar_geometria(r.caixas_viaveis, r.caixas_excluidas)
 
     print(f"\n   mediana de contraste (define alto/baixo): {r.mediana_contraste:.3f}")
@@ -158,6 +160,7 @@ def main(
         "gerado_por": "scripts/verificar_celulas_fase3.py (não editar à mão -- adendo §2)",
         "adendo": "docs/pre_registro/adendo_fase3_fatorial.md (commit efd4699)",
         "fontes_elegiveis": FONTES_ELEGIVEIS,
+        "niveis_escala": niveis_escala or ["casada", "reduzida", "ampliada"],
         "min_dim_px": MIN_DIM_PX,
         "faixa_casada_fator_reescala": [0.5, 2.0],
         "mediana_contraste": r.mediana_contraste,
@@ -173,8 +176,8 @@ def main(
         "n_variacoes": 2,
         "n_sinteticas_por_celula_estimado": 2 * len(imgs_viaveis),
     }
-    (destino_drive / "celulas_fase3.json").write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
-    with open(destino_drive / "caixas_viaveis_fase3.csv", "w", newline="", encoding="utf-8") as f:
+    (destino_drive / f"celulas_fase3{sufixo}.json").write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
+    with open(destino_drive / f"caixas_viaveis_fase3{sufixo}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f); w.writerow(["imagem_id", "box_index", "area_px"])
         w.writerows([[c.imagem_id, c.box_index, f"{c.area_px:.0f}"] for c in r.caixas_viaveis])
     print(f"\n✅ Salvo em {destino_drive}: celulas_fase3.json, caixas_viaveis_fase3.csv")
