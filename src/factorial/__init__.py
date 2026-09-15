@@ -11,3 +11,5 @@ __all__ = [
 ]
 from .seletor import construir_seletor_celula, carregar_caixas_permitidas, CaixaPermitidaSemCrop
 __all__ += ["construir_seletor_celula", "carregar_caixas_permitidas", "CaixaPermitidaSemCrop"]
+from .celulas import imagens_com_colagem, remover_sinteticas_sem_colagem
+__all__ += ["imagens_com_colagem", "remover_sinteticas_sem_colagem"]

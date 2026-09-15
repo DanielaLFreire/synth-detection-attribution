@@ -2303,3 +2303,18 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   ao terminar (assert) antes de seguir.
 - Orçamento: ~1,5 h/execução (5.288 imgs/época nas células, 2.696 no
   controle) -> ~23 h no total, em quantas sessões forem necessárias.
+
+## 2026-09-15 — Desvio pego ANTES do treino: 104 cópias do real por célula, removidas
+
+- A preparação encontrou 2.696 sintéticas por célula, não as 2.592
+  pré-registradas (adendo 2 §3.5). Causa: 52 imagens de treino sem
+  nenhuma caixa viável; o compositor grava a saída mesmo sem colagem
+  -> 104 "sintéticas" por célula eram cópias idênticas do real (com o
+  label real). Idênticas entre células (sem confound entre elas), mas
+  desviavam do pré-registro e criavam uma assimetria pequena contra o
+  controle (104 cópias reais extras).
+- **Correção**: `remover_sinteticas_sem_colagem()` (src/factorial) apaga
+  as saídas de imagens sem colagem, pelo manifesto; a preparação aplica
+  por célula, imprime quantas removeu, e ASSERTA que o N sintético é
+  igual entre células. Esperado: 2.592 por célula, trainlist 5.288.
+  Teste adicionado; suíte 177/177. Nenhuma GPU gasta.

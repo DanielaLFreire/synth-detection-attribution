@@ -135,3 +135,16 @@ def test_comparar_geometria_usa_referencial_640():
     assert g["viaveis"]["fracao_small_640"] == 1.0    # 22 px < 32 -> small no referencial certo
     assert g["viaveis"]["lado_mediano_640"] == pytest.approx(22.4, abs=0.1)
     assert g["excluidas"]["fracao_small_640"] == 0.0  # 47 px -> não small
+
+
+def test_remover_sinteticas_sem_colagem(tmp_path):
+    from src.factorial import remover_sinteticas_sem_colagem
+    imgs = tmp_path / "images"; lbls = tmp_path / "labels"; imgs.mkdir(); lbls.mkdir()
+    for nome in ("A_v00", "A_v01", "B_v00", "B_v01"):
+        (imgs / f"{nome}.png").write_bytes(b"x"); (lbls / f"{nome}.txt").write_text("0 .5 .5 .1 .1\n")
+    # manifesto: só a imagem A recebeu colagem
+    (tmp_path / "m.csv").write_text("imagem_id,box_index\nA,0\nA,0\n")
+    n = remover_sinteticas_sem_colagem(imgs, lbls, tmp_path / "m.csv")
+    assert n == 2
+    assert sorted(p.name for p in imgs.iterdir()) == ["A_v00.png", "A_v01.png"]
+    assert sorted(p.name for p in lbls.iterdir()) == ["A_v00.txt", "A_v01.txt"]

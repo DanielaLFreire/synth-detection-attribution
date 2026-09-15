@@ -23,6 +23,7 @@ de contraste): O(log n) por consulta.
 from __future__ import annotations
 
 import bisect
+from pathlib import Path
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -191,3 +192,32 @@ def comparar_geometria(viaveis: list[CaixaAlvo], excluidas: list[CaixaAlvo], lim
             "fracao_small_640": float(np.mean(a640 < limiar_small_px2)) if tem_640 else None,
         }
     return {"referencial": "letterbox_640", "viaveis": resumo(viaveis), "excluidas": resumo(excluidas)}
+
+
+# ---------------------------------------------------------------------------
+# Limpeza pós-composição: sintéticas sem nenhuma colagem são cópias do real
+# ---------------------------------------------------------------------------
+
+def imagens_com_colagem(manifesto_csv: Path) -> set[str]:
+    """Conjunto de `imagem_id` que receberam ao menos uma colagem, pelo manifesto."""
+    import csv
+    with open(manifesto_csv, newline="", encoding="utf-8") as f:
+        return {l["imagem_id"] for l in csv.DictReader(f)}
+
+
+def remover_sinteticas_sem_colagem(pasta_imagens: Path, pasta_labels: Path, manifesto_csv: Path) -> int:
+    """Remove as saídas `{imagem_id}_v{k}.png/.txt` de imagens sem nenhuma
+    colagem (cópias idênticas do real, geradas pelo compositor quando
+    nenhuma caixa da imagem é viável). Retorna quantas imagens foram
+    removidas. Mantém o N sintético igual ao pré-registrado (adendo 2 §3.5)."""
+    com_colagem = imagens_com_colagem(manifesto_csv)
+    removidas = 0
+    for p in sorted(Path(pasta_imagens).glob("*_v*.png")):
+        imagem_id = p.stem.rsplit("_v", 1)[0]
+        if imagem_id not in com_colagem:
+            p.unlink()
+            label = Path(pasta_labels) / f"{p.stem}.txt"
+            if label.exists():
+                label.unlink()
+            removidas += 1
+    return removidas

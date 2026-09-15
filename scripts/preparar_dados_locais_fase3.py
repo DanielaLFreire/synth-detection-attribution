@@ -25,6 +25,7 @@ import zipfile
 from pathlib import Path
 
 from src.train import construir_trainlist_balanceado, construir_trainlist_real_sobreamostrado
+from src.factorial import remover_sinteticas_sem_colagem
 
 RAIZ = "/content/drive/MyDrive/PROJETO_MARINHA/EXPERIMENTO_ATRIBUICAO_CAUSAL"
 DRIVE_CELULAS = f"{RAIZ}/fase3/celulas"
@@ -66,11 +67,12 @@ def main(destino_local: str = "/content/fase3_dados_locais", drive_celulas: str 
         pasta.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(Path(drive_celulas) / f"{cel}.zip") as z:
             z.extractall(pasta)
+        n_removidas = remover_sinteticas_sem_colagem(pasta / "images", pasta / "labels", Path(drive_celulas) / f"manifesto_{cel}.csv")
         n_img = len(list((pasta / "images").glob("*.png")))
         c = construir_trainlist_balanceado(rt_img, pasta / "images", trainlists / f"trainlist_{cel}.txt", repeat_real=repeat_real)
         _yaml(configs / f"data_{cel}.yaml", trainlists / f"trainlist_{cel}.txt", rv_img)
         contagens[cel] = c.n_total
-        print(f"   {cel}: {n_img} sintéticas | trainlist {c.n_real} real + {c.n_sintetico} sint = {c.n_total} ({c.proporcao_real:.1%} real)")
+        print(f"   {cel}: {n_img} sintéticas (removidas {n_removidas} cópias sem colagem) | trainlist {c.n_real} real + {c.n_sintetico} sint = {c.n_total} ({c.proporcao_real:.1%} real)")
 
     print("\n3) Controle (real sobreamostrado, zero sintético)...")
     c = construir_trainlist_real_sobreamostrado(rt_img, trainlists / "trainlist_controle.txt", repeat_real=repeat_real)
@@ -78,6 +80,9 @@ def main(destino_local: str = "/content/fase3_dados_locais", drive_celulas: str 
     contagens["controle"] = c.n_total
     print(f"   controle: {c.n_real} real = {c.n_total}")
 
+    n_sint = {cel: contagens[cel] - 2 * 1348 for cel in celulas}
+    assert len(set(n_sint.values())) == 1, f"N sintético difere entre células: {n_sint}"
+    print(f"   N sintético por célula (igual em todas): {next(iter(n_sint.values()))}")
     (configs / "contagens.json").write_text(json.dumps({"repeat_real": repeat_real, "n_imagens_epoca": contagens}, indent=2), encoding="utf-8")
     print(f"\n✅ Preparado em {d}. contagens.json: {contagens}")
     return contagens
