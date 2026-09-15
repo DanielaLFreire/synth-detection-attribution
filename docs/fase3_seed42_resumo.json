@@ -1,0 +1,41 @@
+{
+  "seed": 42,
+  "epoca_checkpoint": 150,
+  "bracos": {
+    "casada__alto": {
+      "recall_150": 0.69376,
+      "mAP50_150": 0.74493,
+      "recall_janela_141_150": 0.697963,
+      "epoca_pico_recall": 92,
+      "recall_pico": 0.70639
+    },
+    "casada__baixo": {
+      "recall_150": 0.68549,
+      "mAP50_150": 0.73928,
+      "recall_janela_141_150": 0.691489,
+      "epoca_pico_recall": 103,
+      "recall_pico": 0.72025
+    },
+    "reduzida__alto": {
+      "recall_150": 0.67956,
+      "mAP50_150": 0.74042,
+      "recall_janela_141_150": 0.6824470000000001,
+      "epoca_pico_recall": 74,
+      "recall_pico": 0.70639
+    },
+    "reduzida__baixo": {
+      "recall_150": 0.68508,
+      "mAP50_150": 0.74167,
+      "recall_janela_141_150": 0.6906260000000001,
+      "epoca_pico_recall": 86,
+      "recall_pico": 0.71113
+    },
+    "controle": {
+      "recall_150": 0.70166,
+      "mAP50_150": 0.75159,
+      "recall_janela_141_150": 0.705274,
+      "epoca_pico_recall": 121,
+      "recall_pico": 0.71554
+    }
+  }
+}

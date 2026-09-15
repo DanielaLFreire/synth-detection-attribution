@@ -2318,3 +2318,38 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   por célula, imprime quantas removeu, e ASSERTA que o N sintético é
   igual entre células. Esperado: 2.592 por célula, trainlist 5.288.
   Teste adicionado; suíte 177/177. Nenhuma GPU gasta.
+- **Tentativa de treino iniciada sob a preparação com cópias** (antes da
+  correção chegar ao Colab): interrompida e DESCARTADA por inteiro --
+  `/content/fase3_runs` e `fase3/runs` no Drive apagados, para que o
+  executor retomável não considere "concluída" nenhuma execução treinada
+  com a trainlist de 5.392. Nenhum resultado dessa tentativa é usado.
+  Custo: o tempo de GPU até a interrupção.
+
+## 2026-09-15 — Fase 3, réplica seed 42 completa (5 execuções): leitura provisória, sem vereditos
+
+- **Integridade**: 5 × 150 épocas, curvas sãs, sem anomalias de pipeline.
+- **Época 150, recall in-domain (val)**: controle 0,7017; casada__alto
+  0,6938; casada__baixo 0,6855; reduzida__baixo 0,6851; reduzida__alto
+  0,6796.
+- **Contrastes pré-registrados (UMA seed -- o critério exige 3; nenhum
+  veredito)**: P5b' casada − reduzida = +0,73 pp (direção prevista,
+  abaixo do piso 2,0); P8 alto − baixo = +0,14 pp (~zero); P9 interação
+  +1,38 pp (exploratória); P10: todas as células abaixo do controle
+  (−0,79 a −2,21 pp).
+- **Observações provisórias, a confirmar com 3 seeds**: (1) efeitos na
+  faixa do piso de ruído; (2) contraste, a feature de crop mais forte
+  para DETECTABILIDADE no Estágio A, não se traduz em utilidade de
+  TREINO -- se confirmado, é a distinção central do projeto ("reconhecer
+  o objeto colado" ≠ "aprender com ele"); (3) padrão da Fase 1 repetido:
+  células fazem pico mais cedo (épocas 74-103 vs 121 do controle) e caem
+  mais até a 150 (2,6-3,5 pp vs 1,4); no pico, casada__baixo (0,720)
+  supera o pico do controle (0,716). A época fixa 150 captura o
+  sobreajuste mais rápido dos braços com sintético -- fenômeno medido,
+  não escondido (decisão da Fase 1); comparação no pico é EXPLORATÓRIA
+  (F3), nunca primária.
+- **Decisão: continuar sem alteração** (seeds 123 e 2024). Não há
+  problema de pipeline; efeitos pequenos são resultado, não defeito; P8
+  nulo e P10 negativo só são críveis com 3 seeds.
+- **Análise secundária pré-registrada pendente** (recall estratificado
+  por tamanho): exige uma passada de inferência dos 15 `last.pt` sobre
+  val (332 imagens × 15 modelos -- trivial), após as 3 seeds.
