@@ -1,0 +1,169 @@
+"""
+Viabilidade das células do fatorial da Fase 3 (tarefa 3.2; adendo lacrado
+em docs/pre_registro/adendo_fase3_fatorial.md, commit efd4699).
+
+Desenho 3 × 2: escala {casada, reduzida, ampliada} × contraste {alto, baixo}.
+Fontes elegíveis: SMD, SeaShips, ABOShips (InaTechShips excluído).
+
+Definições (idênticas às já usadas no projeto -- verificadas no código):
+- fator_reescala = area_caixa / area_nativa_do_crop (razão de ÁREAS,
+  src/compose/compose.py linha 182; Fase 0; adendo §2).
+- casada: fator em [0,5, 2,0]  <=> area_crop em [A/2, 2A]
+- reduzida: fator < 0,5        <=> area_crop > 2A
+- ampliada: fator > 2,0        <=> area_crop < A/2
+- contraste alto: > mediana do pool elegível; baixo: <= mediana.
+
+Uma caixa é VIÁVEL numa célula se, para cada uma das 3 fontes, existe ao
+menos `minimo_por_fonte` crops elegíveis. Uma caixa entra no fatorial só
+se for viável em TODAS as 6 células (mesmas caixas em todas, adendo §3.1).
+
+Contagem por busca binária sobre as áreas ordenadas de cada (fonte, nível
+de contraste): O(log n) por consulta.
+"""
+from __future__ import annotations
+
+import bisect
+from dataclasses import dataclass, field
+
+import numpy as np
+
+FONTES_ELEGIVEIS = ["SMD", "SeaShips", "ABOShips"]
+NIVEIS_ESCALA = ["casada", "reduzida", "ampliada"]
+NIVEIS_CONTRASTE = ["alto", "baixo"]
+FAIXA_CASADA = (0.5, 2.0)
+
+
+@dataclass(frozen=True)
+class CropElegivel:
+    nome: str
+    fonte: str
+    area_px: float
+    contraste: float
+
+
+@dataclass(frozen=True)
+class CaixaAlvo:
+    imagem_id: str
+    box_index: int
+    area_px: float
+
+
+def nivel_escala(fator_reescala: float) -> str:
+    lo, hi = FAIXA_CASADA
+    if lo <= fator_reescala <= hi:
+        return "casada"
+    return "reduzida" if fator_reescala < lo else "ampliada"
+
+
+def nivel_contraste(contraste: float, mediana: float) -> str:
+    return "alto" if contraste > mediana else "baixo"
+
+
+def _indexar_pool(pool: list[CropElegivel], mediana: float) -> dict[tuple[str, str], list[float]]:
+    """{(fonte, nivel_contraste): areas ordenadas}."""
+    indice: dict[tuple[str, str], list[float]] = {
+        (f, c): [] for f in FONTES_ELEGIVEIS for c in NIVEIS_CONTRASTE
+    }
+    for crop in pool:
+        if crop.fonte not in FONTES_ELEGIVEIS:
+            continue
+        indice[(crop.fonte, nivel_contraste(crop.contraste, mediana))].append(crop.area_px)
+    for chave in indice:
+        indice[chave].sort()
+    return indice
+
+
+def contar_elegiveis(area_caixa: float, areas_ordenadas: list[float], nivel: str) -> int:
+    """Quantos crops (áreas ordenadas) caem no nível de escala para esta caixa."""
+    lo, hi = FAIXA_CASADA
+    a_min, a_max = area_caixa / hi, area_caixa / lo  # casada <=> area_crop em [A/2, 2A]
+    if nivel == "casada":
+        return bisect.bisect_right(areas_ordenadas, a_max) - bisect.bisect_left(areas_ordenadas, a_min)
+    if nivel == "reduzida":
+        return len(areas_ordenadas) - bisect.bisect_right(areas_ordenadas, a_max)
+    if nivel == "ampliada":
+        return bisect.bisect_left(areas_ordenadas, a_min)
+    raise ValueError(nivel)
+
+
+@dataclass
+class ResultadoViabilidade:
+    mediana_contraste: float
+    minimo_por_fonte: int
+    n_caixas_total: int
+    caixas_viaveis: list[CaixaAlvo]
+    caixas_excluidas: list[CaixaAlvo]
+    # célula -> nº de caixas viáveis nela (antes da interseção)
+    viaveis_por_celula: dict[str, int]
+    # célula -> fonte -> menor contagem entre as caixas viáveis (gargalo)
+    gargalo_por_celula_fonte: dict[str, dict[str, int]]
+    pool_por_fonte_contraste: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def fracao_viavel(self) -> float:
+        return len(self.caixas_viaveis) / self.n_caixas_total if self.n_caixas_total else 0.0
+
+
+def nome_celula(escala: str, contraste: str) -> str:
+    return f"{escala}__{contraste}"
+
+
+def verificar_viabilidade(
+    caixas: list[CaixaAlvo],
+    pool: list[CropElegivel],
+    mediana_contraste: float | None = None,
+    minimo_por_fonte: int = 1,
+) -> ResultadoViabilidade:
+    elegiveis = [c for c in pool if c.fonte in FONTES_ELEGIVEIS]
+    if mediana_contraste is None:
+        mediana_contraste = float(np.median([c.contraste for c in elegiveis])) if elegiveis else 0.0
+    indice = _indexar_pool(elegiveis, mediana_contraste)
+
+    celulas = [nome_celula(e, c) for e in NIVEIS_ESCALA for c in NIVEIS_CONTRASTE]
+    viaveis_por_celula = {cel: 0 for cel in celulas}
+    gargalo = {cel: {f: None for f in FONTES_ELEGIVEIS} for cel in celulas}
+
+    viaveis, excluidas = [], []
+    for caixa in caixas:
+        viavel_em_todas = True
+        contagens_caixa: dict[str, dict[str, int]] = {}
+        for e in NIVEIS_ESCALA:
+            for c in NIVEIS_CONTRASTE:
+                cel = nome_celula(e, c)
+                contagens = {f: contar_elegiveis(caixa.area_px, indice[(f, c)], e) for f in FONTES_ELEGIVEIS}
+                contagens_caixa[cel] = contagens
+                ok = all(n >= minimo_por_fonte for n in contagens.values())
+                if ok:
+                    viaveis_por_celula[cel] += 1
+                else:
+                    viavel_em_todas = False
+        if viavel_em_todas:
+            viaveis.append(caixa)
+            for cel, contagens in contagens_caixa.items():
+                for f, n in contagens.items():
+                    atual = gargalo[cel][f]
+                    gargalo[cel][f] = n if atual is None else min(atual, n)
+        else:
+            excluidas.append(caixa)
+
+    return ResultadoViabilidade(
+        mediana_contraste=mediana_contraste,
+        minimo_por_fonte=minimo_por_fonte,
+        n_caixas_total=len(caixas),
+        caixas_viaveis=viaveis,
+        caixas_excluidas=excluidas,
+        viaveis_por_celula=viaveis_por_celula,
+        gargalo_por_celula_fonte={cel: {f: (v if v is not None else 0) for f, v in fs.items()} for cel, fs in gargalo.items()},
+        pool_por_fonte_contraste={f"{f}__{c}": len(v) for (f, c), v in indice.items()},
+    )
+
+
+def comparar_geometria(viaveis: list[CaixaAlvo], excluidas: list[CaixaAlvo], limiar_small_px2: float = 32 * 32) -> dict:
+    """Detecta exclusão sistemática: compara área mediana e fração 'small'
+    (COCO: área < 32²) entre caixas mantidas e excluídas."""
+    def resumo(cs):
+        if not cs:
+            return {"n": 0, "area_mediana": None, "fracao_small": None}
+        a = np.array([c.area_px for c in cs])
+        return {"n": int(len(a)), "area_mediana": float(np.median(a)), "fracao_small": float(np.mean(a < limiar_small_px2))}
+    return {"viaveis": resumo(viaveis), "excluidas": resumo(excluidas)}

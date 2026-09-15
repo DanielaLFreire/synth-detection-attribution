@@ -2104,3 +2104,31 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   venv + `pip install -r requirements.txt`, para que os testes rodem no
   mesmo stack em que o experimento executa. Rodar testes num ambiente
   divergente do de execução esvazia o propósito de rodá-los.
+
+## 2026-09-14 — Fase 3, tarefa 3.2: verificador de viabilidade das células (CPU)
+
+- **Definições verificadas no código antes de escrever** (unidades erradas
+  aqui invalidariam o fatorial): `fator_reescala = area_destino /
+  area_original` (razão de ÁREAS, compose.py:182) -- consistente com a
+  Fase 0 e o adendo; filtro das colagens = min_dim_px=20; conversão
+  YOLO->px reutiliza `ler_caixas_yolo` do compositor (mesmo arredondamento).
+- **Entregue**: `src/factorial/celulas.py` -- classificação de níveis
+  (casada [0,5, 2,0] inclusiva; reduzida < 0,5; ampliada > 2,0; contraste
+  alto > mediana, baixo <= mediana), contagem de crops elegíveis por
+  (célula, fonte, caixa) via busca binária sobre áreas ordenadas, regra
+  "viável em TODAS as 6 células ou excluída de todas", gargalo por célula
+  e fonte, e comparação de geometria viáveis vs excluídas (detecta
+  exclusão sistemática, ex.: só caixas grandes). `tests/test_celulas.py`
+  (9 testes; inclui prova de que a contagem por bisect bate com a
+  classificação crop a crop). Suíte: 159/159.
+- `scripts/verificar_celulas_fase3.py` (CPU): contraste de TODO o pool
+  elegível (cacheado no Drive, uma vez), mediana fixada, viabilidade das
+  caixas de treino, e geração de `celulas_fase3.json` (por script, não à
+  mão -- adendo §2) + `caixas_viaveis_fase3.csv`.
+- **Critério de decisão registrado antes do resultado**: o desenho se
+  sustenta se (a) a fração de caixas viáveis for alta o bastante para não
+  reduzir drasticamente o volume de treino, E (b) as caixas excluídas
+  não diferirem sistematicamente em geometria das mantidas (fração
+  "small" comparável). Se (b) falhar, a exclusão muda o perfil de escala
+  do conjunto e precisa ser reportada como limitação -- ou o desenho
+  revisto por novo adendo.
