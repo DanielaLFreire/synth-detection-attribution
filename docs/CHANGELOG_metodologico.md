@@ -2431,3 +2431,37 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   last.pt; marcador ausente. Veredito GO/NO-GO. `src/evaluation/isolamento.py`
   com 3 testes (inclui duplicata por conteúdo com nome diferente).
   Suíte 192/192.
+
+## 2026-09-16 — Verificação pré-avaliação do teste: GO (7/7)
+
+- Teste: 401 imagens, 401 labels pareados, 1.247 caixas, fração small a
+  640 = 0,799 (val 0,857; Fase 0 0,822).
+- Isolamento por NOME contra train/val: 0 ∩ 0. Por CONTEÚDO (md5): 0
+  imagens idênticas a train, 0 a val, 0 duplicatas internas.
+- Contra os 7 manifestos gerados pelo projeto (sondagem, sintéticas da
+  Fase 1, 4 células, caixas viáveis): interseção 0 em todos, com todos os
+  manifestos ENCONTRADOS (nenhuma checagem vazia).
+- 18/18 `last.pt` presentes; marcador de avaliação ausente.
+- **Autorizada a avaliação única** (`avaliar_teste_fase4.main()`).
+
+## 2026-09-16 — Fase 4: teste avaliado uma vez. Projeto principal encerrado.
+
+- Avaliação em 2026-09-16T13:31:32Z, commit `53066ad`, 18 modelos (lista
+  fixa), marcador gravado. Teste: 401 imagens, 1.247 caixas, 79,9% small.
+- **P10 REPLICOU**: células − controle −1,75 pp [−2,39, −1,06, −1,79],
+  12/12 pares negativos (val −1,80). Achado robusto do projeto.
+- **P5b' NÃO replicou**: +0,08 pp, sinais mistos (val +0,80, 3/3). A
+  "confirmação fraca" era ruído abaixo do piso -- a regra pré-registrada
+  funcionou. P8 nula nos dois. P6' não testável (erro do adendo).
+- controle − B2 = +1,18 pp (3/3; val +1,67); células − B2 = −0,57:
+  sintético + real×2 ≈ real×1. Efeito de seed em val (p=0,008) não
+  generalizou ao teste (p=0,96). Todos os braços +2,6 a +3,2 pp no teste
+  (mais fácil, 80% vs 86% small), ordem preservada. F2 no teste fraca e
+  mista -- "prejuízo nos não-small" não é robusto.
+- `docs/resultados_fase4_teste.md` com a conclusão final do projeto.
+- **Próximo experimento (proposto, não iniciado)**: imagens REAIS de
+  datasets públicos como aumento do CITRA -- fatorial escala-da-imagem ×
+  aparência, controles CITRA-só e mistura aleatória, protocolo de PASSOS
+  fixos (separa "mais dados" de "mais passos"), 3 seeds, piso re-medido.
+  Exige adendo próprio; segunda avaliação no teste só se pré-registrada
+  como lista fixa de experimento distinto.

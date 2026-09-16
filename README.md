@@ -25,11 +25,53 @@ SHAP over per-paste features) from expensive controlled **confirmation**
 (factorial manipulation of the top candidate features), because observational
 feature importance is not, by itself, evidence of causality.
 
-## Status
+## Status — experiment closed (2026-09-16)
 
-Pre-registration in progress (Phase 0 of the plan in `docs/`). No GPU training
-has started. See `docs/CHANGELOG_metodologico.md` for the running log of
-methodological decisions.
+All four phases are complete and the test split was evaluated exactly once.
+Everything below is reproducible from this repository plus the Drive
+artifacts listed in `docs/README_DRIVE.md`.
+
+| Phase | What | Where |
+|---|---|---|
+| 0 | Profiling, coverage, probe compositions, **sealed pre-registration** (P1–P7) | `docs/pre_registro/previsoes_fase0.md`, `hashes.json` |
+| 1 | Training pilot: determinism gate, noise floor (2.0 pp), fixed checkpoint (epoch 150) | `docs/CHANGELOG_metodologico.md` (2026-09-09) |
+| 2 | Stage A: observational attribution (GBM + SHAP) on a detectability target | `docs/resultados_estagio_a.md` |
+| 3 | Stage B: causal 2×2 factorial (scale × contrast), **sealed addendum 2** | `docs/pre_registro/adendo2_fase3_fatorial_2x2.md` (commit `a4ec7ab`), `docs/resultados_fase3.md` |
+| 4 | Single evaluation on the untouched test split (guarded) | `docs/resultados_fase4_teste.md`, `fase4/teste_avaliado.json` |
+
+### Main findings (confirmed on the test split)
+
+1. **Segment-and-paste synthetic composition does not beat re-using the
+   real data.** Every factorial cell scored below the real-oversampled
+   control (−1.75 pp recall, 12/12 paired seed×cell comparisons), and
+   ≈ equal to real ×1. Composition accelerates overfitting without
+   raising the attainable ceiling.
+2. **No manipulated crop characteristic changes that.** Scale matching:
+   null on test (a weak, consistent direction on validation did not
+   replicate). Crop contrast: null on both.
+3. **Detectability proxies do not predict training utility.** Contrast was
+   the strongest crop-level predictor of detectability in Stage A and had
+   zero effect as a training factor in Stage B. Observational attribution
+   over a "does a real-trained detector recognise the paste?" target
+   measures plausibility, not usefulness.
+4. **A structural limit of the method**: with minimum-quality crops
+   (≥ 20 px), "upscaling" is physically impossible for ~82 % of the boxes
+   of a small-object maritime target.
+5. The pre-registered predictions that failed all failed in the same
+   direction (scale and domain similarity over-estimated; native
+   resolution and photometry under-estimated) — and they are sealed, so
+   the story was not fitted to the result.
+
+Pre-registrations: P1–P7 sealed 2026-09-09 (see `hashes.json`); addendum 1
+(`efd4699`, rejected by a pre-declared viability criterion before any
+training); addendum 2 (`a4ec7ab`). Test evaluated once at commit `53066ad`.
+
+Total GPU used: ≈ 4.5 h (Phase 1 pilot) + ≈ 0.6 h (Stage A inference +
+CLIP) + ≈ 23 h (Phase 3) + minutes (Phase 4).
+
+A follow-up experiment on **real** public images as augmentation (fixed
+optimisation steps, image-level scale profile × appearance) is proposed in
+the changelog and will live in a separate repository.
 
 ## Repository structure
 
