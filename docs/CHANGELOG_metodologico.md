@@ -2406,3 +2406,20 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   primária (limiar de máximo-F1) -- nulo a minúsculo. P8 permanece
   refutada. Nenhum estrato com célula acima do controle.
 - **Fase 3 fechada.** `docs/resultados_fase3.md` atualizado.
+
+## 2026-09-16 — Fase 4 (mínima): avaliação única no split de teste, com trava
+
+- **Lista de modelos FIXADA antes de rodar**: 15 da Fase 3 (4 células +
+  controle × 3 seeds, `last.pt`) + 3 B2 da Fase 1 como referência
+  rotulada. Não há seleção de modelo em cima do teste.
+- **Métricas**: primária (recall/mAP no ponto de máximo-F1, mesma
+  definição do results.csv) via `model.val`; F2 (recall por tamanho, conf
+  >= 0,25, IoU >= 0,5). Contrastes pré-registrados recalculados sobre o
+  teste com `analisar_fatorial`.
+- **Trava** (`src/evaluation/guarda_teste.py`): grava
+  `fase4/teste_avaliado.json` no Drive (data, commit, lista de modelos,
+  tamanho do teste); segunda chamada é RECUSADA. Sem flag de contorno:
+  reavaliar exige adendo documentado e remoção manual do marcador,
+  deixando rastro. `tests/test_guarda_teste.py` (2 testes). Suíte 189/189.
+- Se algum modelo faltar no Drive, o script para ANTES de avaliar
+  qualquer coisa (o teste só é tocado com a lista completa).
