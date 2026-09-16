@@ -2390,3 +2390,19 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   separada, limitações. `scripts/recall_por_tamanho_fase3.py`: F2
   pendente (inferência dos 15 last.pt sobre val; definição fixada antes
   do resultado: conf>=0,25, IoU>=0,5, casamento guloso, estrato a 640).
+
+## 2026-09-16 — F2 (recall por tamanho) concluída: composição ≈ neutra nos small, prejudicial nos não-small
+
+- val: 1.086 small (85,7%), 181 não-small. **Caveat**: o piso de 2,0 pp
+  não está calibrado para 181 caixas (1 caixa = 0,55 pp; flutuação
+  binomial ~2,5 pp por execução) -- vereditos "real" no estrato não-small
+  não são confiáveis pelo critério pré-registrado.
+- Small: células − controle −0,70 pp (dentro do ruído); contraste +0,57
+  pp (3/3 seeds); escala +0,32 (mista). Não-small: −2,44 pp; contraste
+  +1,01 (3/3); escala −0,64 (mista).
+- Refina, não inverte: o prejuízo agregado vem dos não-small; no regime
+  dominante do alvo a composição é ≈ neutra. Contraste: direção positiva
+  consistente a limiar fixo, mas < 1 pp e de sinal oposto na métrica
+  primária (limiar de máximo-F1) -- nulo a minúsculo. P8 permanece
+  refutada. Nenhum estrato com célula acima do controle.
+- **Fase 3 fechada.** `docs/resultados_fase3.md` atualizado.

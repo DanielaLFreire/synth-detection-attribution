@@ -41,8 +41,22 @@ Fase 1 não era excesso de cautela).
 
 ## 3. Análises secundárias e exploratórias
 
-- **F2 — recall estratificado por tamanho**: pendente; exige inferência
-  dos 15 `last.pt` sobre val (`scripts/recall_por_tamanho_fase3.py`).
+- **F2 — recall estratificado por tamanho** (conf ≥ 0,25, IoU ≥ 0,5,
+  casamento guloso; estrato a 640): val tem 1.086 small (85,7%) e 181
+  não-small. **Caveat obrigatório**: o piso de 2,0 pp foi calibrado em
+  1.267 caixas; no estrato de 181, uma caixa = 0,55 pp e a flutuação
+  binomial de uma execução é ~2,5 pp — vereditos "real" nesse estrato
+  NÃO são confiáveis pelo critério pré-registrado.
+  - *Small*: células − controle **−0,70 pp** (−0,21 a −1,10) — dentro do
+    ruído, ≈ neutro. Contraste +0,57 pp (3/3 seeds). Escala +0,32 (mista).
+  - *Não-small*: células − controle −2,44 pp (−1,47 a −3,13); contraste
+    +1,01 pp (3/3); escala −0,64 (mista).
+  - Leitura: o prejuízo agregado (−1,8 pp) vem sobretudo dos objetos
+    não-small; no regime dominante do alvo a composição é ≈ neutra.
+    Contraste tem direção positiva consistente a limiar fixo, mas < 1 pp
+    e de sinal oposto na métrica primária (limiar de máximo-F1): nulo a
+    minúsculo, dependente do ponto de operação. Nenhum estrato mostra
+    célula acima do controle.
 - **F3 — no pico** (seleção informada por validação; NUNCA primária): pico
   médio casada 0,713, reduzida 0,709–0,711, controle 0,715. No pico,
   célula − controle = −0,15 a −0,57 pp, sinais mistos: **empate**. Época
@@ -89,5 +103,5 @@ Fase 1 não era excesso de cautela).
   testou se volumes maiores ou menores mudam o quadro.
 - Um detector (YOLO11n), um cronograma (150 épocas), uma resolução (640).
 - `reduzida` agrupa reduções moderadas e extremas (p05 do fator ≈ 0,02).
-- P6' não testada (erro do adendo). F2 pendente.
+- P6' não testada (erro do adendo). Estrato não-small pequeno demais (181) para o piso.
 - Métrica no split de validação; o teste é avaliado uma vez na Fase 4.
