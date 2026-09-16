@@ -2353,3 +2353,40 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 - **Análise secundária pré-registrada pendente** (recall estratificado
   por tamanho): exige uma passada de inferência dos 15 `last.pt` sobre
   val (332 imagens × 15 modelos -- trivial), após as 3 seeds.
+
+## 2026-09-16 — Fase 3 completa: 15 execuções íntegras; análise fatorial; vereditos
+
+- **Entregue**: `src/factorial/analise.py` -- ANOVA 2×2 com seed como
+  bloco, contrastes pré-registrados por seed (t pareado, d de Cohen,
+  leave-one-seed-out), regra do piso (real / direção / ruído), Holm por
+  família. Distribuições t e F implementadas sem scipy e validadas contra
+  valores tabelados (`tests/test_analise.py`, 10 testes). Suíte 187/187.
+- **Resultados (época 150, recall val)**: controle 0,7051; casada__baixo
+  0,6926; casada__alto 0,6896; reduzida__baixo 0,6834; reduzida__alto
+  0,6829. ANOVA: escala p=0,056; contraste p=0,62; interação p=0,72;
+  **seed p=0,008**.
+- **Vereditos pela letra (adendo 2)**: P5b' **confirmação fraca** (+0,80
+  pp, direção nas 3 seeds, abaixo do piso); P8 **refutada** (−0,18 pp,
+  nulo); P9 ruído; P10: **nenhuma célula supera o controle**, 12/12
+  pares negativos, média −1,80 pp (d=−6,95, p=0,007), reduzida__* passam
+  o critério "real" (−2,2 pp). P5 original refutada (abaixo do piso); P6
+  original não aplicável (resolvida por desenho).
+- **P6' NÃO TESTÁVEL -- erro de desenho do adendo 2**: exige treinos com
+  sintético restrito a cada fonte (36 execuções), não orçados. Registrado
+  como falha do adendo, não como resultado. Lição: cada previsão deve
+  vir com a lista explícita das execuções que a testam.
+- **F3 (exploratório, no pico)**: células e controle EMPATAM no pico
+  (−0,15 a −0,57 pp, sinais mistos); células fazem pico 20-45 épocas
+  antes e caem 2-3× mais até a 150. A composição não abaixa o teto --
+  acelera o sobreajuste. A época fixa (Fase 1) expôs isso; seleção por
+  validação o teria escondido.
+- **Achado central sobre o método**: contraste -- feature de crop mais
+  forte para DETECTABILIDADE no Estágio A -- tem efeito NULO como fator
+  de TREINO. O alvo-proxy do Estágio A mede plausibilidade, não
+  utilidade. Atribuição observacional sobre proxy de detectabilidade não
+  substitui manipulação causal; o desenho em dois estágios foi o que
+  permitiu ver a divergência.
+- `docs/resultados_fase3.md`: confronto pela letra, leitura substantiva
+  separada, limitações. `scripts/recall_por_tamanho_fase3.py`: F2
+  pendente (inferência dos 15 last.pt sobre val; definição fixada antes
+  do resultado: conf>=0,25, IoU>=0,5, casamento guloso, estrato a 640).
