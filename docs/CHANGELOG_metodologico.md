@@ -2423,3 +2423,11 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   deixando rastro. `tests/test_guarda_teste.py` (2 testes). Suíte 189/189.
 - Se algum modelo faltar no Drive, o script para ANTES de avaliar
   qualquer coisa (o teste só é tocado com a lista completa).
+- **Verificação pré-avaliação** (`scripts/verificar_teste_fase4.py`, sem
+  modelo, sem predição): estrutura e pareamento imagem/label; perfil
+  (fração small a 640); isolamento por NOME e por CONTEÚDO (md5) contra
+  train e val; isolamento contra todos os manifestos gerados (sondagem,
+  sintéticas da Fase 1, 4 células, caixas viáveis); presença dos 18
+  last.pt; marcador ausente. Veredito GO/NO-GO. `src/evaluation/isolamento.py`
+  com 3 testes (inclui duplicata por conteúdo com nome diferente).
+  Suíte 192/192.
