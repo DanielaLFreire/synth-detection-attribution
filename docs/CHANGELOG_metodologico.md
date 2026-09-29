@@ -2600,3 +2600,33 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   pré-requisitos com manifesto adulterado ou não registrado, os estados
   concluída/pendente/violação, a trava do G2 e o bloqueio por ambiente
   diferente.
+
+## 2026-09-28 — Fase 5, portão G2 (determinismo): APROVADO (GO)
+
+- **Teste** (adendo 3 §8): `f5_S1_C_seed42` e a repetição
+  `f5_S1_C_g2rep_seed42`, executadas em sequência na mesma sessão.
+- **Critério lacrado**: `results.csv` idêntico em todas as colunas exceto
+  `time`, com igualdade EXATA, sem tolerância. Resultado: 14 colunas × 30
+  épocas, 0 divergências.
+- **Verificação adicional (informativa)**: os tensores do `last.pt` são
+  idênticos nas duas execuções (499/499).
+- **G3 nas duas execuções**: o treinador montou 5.392 imagens (as linhas
+  repetidas da trainlist não foram deduplicadas), 337 lotes/época, 30
+  épocas e 10.110 passos contados por callback; `close_mosaic=2` (mosaic
+  fechado depois da época 28); warmup de 1,48368 épocas = 500 passos.
+- **Ambiente de referência da campanha**: NVIDIA A100-SXM4-80GB, torch
+  2.11.0+cu128, ultralytics 8.4.165, Python 3.13.15. `main()` recusa
+  ambiente diferente.
+- **Tempo medido**: 0,24 h de treino por execução em S1 (orçado ~0,4 h).
+  Nova estimativa para as 29 execuções restantes: ~13 h.
+- `f5_S1_C_seed42` é a execução da lista fechada; a repetição
+  `f5_S1_C_g2rep_seed42` fica fora de todas as análises.
+- **Registro**: `docs/fase5_portao_g2.json` (cópia de
+  `fase5/portao_g2.json` no Drive; `registrado_em_utc`
+  2026-09-29T02:25:49Z).
+- **Incidente sem efeito**: a conexão do navegador com o Colab caiu depois
+  do registro do veredito. A sessão sobreviveu (Drive ainda montado). Os
+  artefatos das duas execuções foram conferidos no Drive: `args.yaml`,
+  `passos_f5.json`, `results.csv` e `weights/`. O veredito já havia sido
+  calculado lendo esses arquivos do Drive, o que confirma que estavam
+  completos.

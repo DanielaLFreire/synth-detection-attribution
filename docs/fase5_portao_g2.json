@@ -1,0 +1,45 @@
+{
+  "veredito": "GO",
+  "criterio": "adendo 3 §8 G2: results.csv idêntico em todas as colunas exceto time; G3 nas duas execuções",
+  "results_identico": true,
+  "n_linhas": [
+    30,
+    30
+  ],
+  "colunas_comparadas": [
+    "epoch",
+    "train/box_loss",
+    "train/cls_loss",
+    "train/dfl_loss",
+    "metrics/precision(B)",
+    "metrics/recall(B)",
+    "metrics/mAP50(B)",
+    "metrics/mAP50-95(B)",
+    "val/box_loss",
+    "val/cls_loss",
+    "val/dfl_loss",
+    "lr/pg0",
+    "lr/pg1",
+    "lr/pg2"
+  ],
+  "divergencias": {},
+  "motivo": "",
+  "g3_execucao_1": [],
+  "g3_execucao_2": [],
+  "pesos_adicional_informativo": {
+    "identico": true,
+    "n_tensores": 499,
+    "n_diferentes": 0,
+    "exemplos": []
+  },
+  "execucoes": [
+    "f5_S1_C_seed42",
+    "f5_S1_C_g2rep_seed42"
+  ],
+  "ambiente": {
+    "torch": "2.11.0+cu128",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "ultralytics": "8.4.165"
+  },
+  "registrado_em_utc": "2026-09-29T02:25:49.547089+00:00"
+}
