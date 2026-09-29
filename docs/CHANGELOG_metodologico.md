@@ -2653,3 +2653,67 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   Fase 5 será escrito, testado com dados fictícios e commitado ANTES do
   fim da campanha S2, e executado uma única vez sobre as 30 execuções.
   A auditoria acima lê apenas campos de processo.
+
+## 2026-09-29 — Fase 5: script de análise fixado ANTES de ver qualquer métrica
+
+Escrito e testado só com dados fictícios, durante a campanha S2.
+**Registro de cegamento (transparência)**: o código foi gerado e entregue
+como patch (`fase5_analise.patch`, SHA-256 `COLE_AQUI_O_SHA256`)
+ANTES de qualquer métrica da Fase 5 ser compartilhada. Depois disso, e
+antes deste commit, o log de treino das 6 execuções S2 das seeds 42 e 123
+(que o Ultralytics imprime por época, incluindo recall e mAP) foi exibido
+no Colab e colado na conversa de apoio. Nenhuma análise, comparação ou
+comentário sobre esses números foi feito. O patch foi aplicado SEM
+alteração de código; a única mudança é este parágrafo. Os logs de
+treino do S1 também imprimem métricas; cegamento aqui significa não
+analisar nem comparar métricas antes de a análise estar fixada, e não
+que nenhum número tenha aparecido na tela. Daqui em diante, só a saída
+de `listar()` é compartilhada.
+
+- **`src/factorial/analise_fase5.py`**: implementação de §5–§7 do adendo 3.
+- **`scripts/analisar_fase5.py`**: execução ÚNICA no val. Exige G2 GO e
+  as 30 execuções concluídas. Grava o manifesto com o SHA-256 completo dos
+  30 `last.pt` (`fase5/modelos_fase5.json`, também para a trava do
+  teste). Grava a trava `analise_val_executada.json` só depois de os
+  resultados estarem salvos, e recusa uma segunda execução.
+- **Decisões de implementação onde o adendo é silencioso, fixadas agora,
+  antes dos dados**:
+  1. *Métrica primária*: `metrics/recall(B)` da última linha do
+     `results.csv`. É o recall no ponto de máximo-F1 do Ultralytics, a
+     mesma fonte da Fase 3, calculada sobre os pesos EMA, que são os
+     salvos em `last.pt`. mAP50 idem.
+  2. *Área sob a curva*: trapézio sobre as épocas 1..N com x = época × 337,
+     dividido pelo intervalo de passos (= recall médio da trajetória).
+  3. *Pico* (F3): primeira época de recall máximo em caso de empate.
+  4. *Sobreposição na regra §6.1*: se o IC95 exclui 0 E o IC90 está
+     dentro de ±1 pp, o veredito é o da diferença (pior/melhor), com
+     `tambem_dentro_da_margem = True` reportado ao lado ("diferença
+     detectável, menor que a margem de relevância").
+  5. *Estrato small* (F2a): mesma definição e mesmo código da F2 da Fase
+     3 (`recall_por_tamanho_fase3`: conf ≥ 0,25, IoU ≥ 0,5, casamento
+     guloso, < 32 px a 640).
+- **Erro de redação do adendo 3, identificado agora e NÃO corrigido**:
+  com 3 doses equiespaçadas (0; 0,25; 0,50), o contraste linear
+  (−1, 0, +1) de P12 não usa M25. Por construção, P12 = P11/2, com o
+  mesmo t e o mesmo p; §6.3 dizia que dividir por 2 tornava P12
+  "comparável a um delta M50 − C", o que também está errado (o valor é
+  a metade). P12 é executado pela letra e reportado com essa nota. Na
+  família F1, o Holm é aplicado aos 3 p, como lacrado, o que penaliza
+  P11 e P13 por uma redundância. A informação de dose-resposta que P12
+  pretendia capturar está na curvatura: o contraste quadrático
+  (C − 2·M25 + M50)/2 foi acrescentado como F3c (S2) e F3d (S1),
+  EXPLORATÓRIO, identificado como acréscimo posterior à lacração e
+  anterior aos dados. Lição para adendos futuros: verificar a
+  ortogonalidade e a não redundância dos contrastes antes de lacrar,
+  como no caso de P6' (adendo 2).
+- **Correção de implementação**: a cauda da t da Fase 3 (`_sf_t`) só é
+  válida para t ≥ 0. A análise da Fase 3 sempre a chamou com |t|, então
+  não foi afetada. O TOST precisa de t negativo, e ganhou
+  `_cauda_superior` com teste de regressão.
+- **Testes** (`tests/test_analise_fase5.py`, 26): quantis t contra tabela;
+  IC calculado à mão; os 4 vereditos e o caso sobreposto; equivalência
+  TOST ⇔ IC90 dentro da margem (300 casos aleatórios); interação; limiar
+  de subdimensionamento; Holm; ANOVA 2×3 com bloco (partição das somas de
+  quadrados, df 1/2/2/4/20, SS de interação nula em dados aditivos); AUC;
+  pico com empate; P12 = P11/2; cenários sintéticos "pior", "melhor com
+  interação positiva" e "equivalente"; trava de execução única.
