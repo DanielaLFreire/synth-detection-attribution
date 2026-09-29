@@ -2630,3 +2630,26 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   `passos_f5.json`, `results.csv` e `weights/`. O veredito já havia sido
   calculado lendo esses arquivos do Drive, o que confirma que estavam
   completos.
+
+## 2026-09-29 — Fase 5, orçamento S1 concluído; auditoria de integridade (sem métricas)
+
+- **Campanha S1**: 15/15 execuções concluídas (`f5_S1_{C,M25,M50}_seed{42,123,2024,7,31415}`),
+  14 numa única sessão após o G2, sem violação de protocolo e sem
+  bloqueio por ambiente.
+- **Auditoria de integridade**, por execução, conferindo `args.yaml`, `passos_f5.json`
+  e `results.csv` no Drive:
+  - trainlist do braço correto (`data_f5_{braço}.yaml`);
+  - seed igual no plano, em `args.yaml` e em `passos_f5.json`;
+  - 30 épocas;
+  - 10.110 passos contados por callback;
+  - 5.392 imagens e 337 lotes/época;
+  - `close_mosaic=2`;
+  - GPU, torch e ultralytics iguais ao G2;
+  - `deterministic=True`.
+  Resultado: **15/15 íntegras, 0 problemas**. Os 15 SHA-256 de `last.pt` são
+  distintos entre si (sem cópia acidental de pesos entre pastas).
+- **Decisão de procedimento (cegamento da análise)**: nenhuma métrica de
+  desempenho do S1 foi aberta ou comparada. O script de análise da
+  Fase 5 será escrito, testado com dados fictícios e commitado ANTES do
+  fim da campanha S2, e executado uma única vez sobre as 30 execuções.
+  A auditoria acima lê apenas campos de processo.
