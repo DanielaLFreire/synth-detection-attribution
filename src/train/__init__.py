@@ -9,6 +9,9 @@ from .trainlist import (
     construir_trainlist_balanceado,
     construir_trainlist_real_sobreamostrado,
     ContagemTrainlist,
+    construir_trainlist_fracao,
+    verificar_trainlist_fracao,
+    TrainlistInvalida,
 )
 
 __all__ = [
@@ -20,6 +23,9 @@ __all__ = [
     "construir_trainlist_balanceado",
     "construir_trainlist_real_sobreamostrado",
     "ContagemTrainlist",
+    "construir_trainlist_fracao",
+    "verificar_trainlist_fracao",
+    "TrainlistInvalida",
 ]
 from .executar import Execucao, execucao_concluida, execucoes_pendentes, copiar_resultados_para_drive, treinar_execucao
 __all__ = list(globals().get("__all__", [])) + [

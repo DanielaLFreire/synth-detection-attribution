@@ -2465,3 +2465,89 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   fixos (separa "mais dados" de "mais passos"), 3 seeds, piso re-medido.
   Exige adendo próprio; segunda avaliação no teste só se pré-registrada
   como lista fixa de experimento distinto.
+
+## 2026-09-28 — Adendo 3 LACRADO (Fase 5): composição vs. real com passos de otimização igualados
+
+- **Motivação** (adendo 3 §1): no adendo 2, todos os braços treinaram 150
+  épocas fixas com warmup igualado em passos, mas com imagens por época
+  diferentes: células 5.288 (331 passos/época, ~49.650 passos) contra o
+  controle 2.696 (169 passos/época, ~25.350 passos). As células
+  receberam ~1,96× os passos do controle. P10 (−1,80 pp val; −1,75 pp
+  teste; 12/12 pares) é compatível com dois mecanismos que o desenho não
+  separa: conteúdo sintético pior OU sobretreino por mais passos. Medido
+  em passos, o pico das células (~28–38 mil) vem DEPOIS do pico do
+  controle (~22 mil), o que contradiz a leitura "a composição acelera o
+  sobreajuste" registrada em 2026-09-16. Essa leitura fica suspensa até a
+  Fase 5. A replicação no teste exclui ruído de seed, não este viés.
+- **Desenho lacrado**: orçamento {S1 = 30 épocas (10.110 passos), S2 = 75
+  épocas (25.275 passos)} × fração sintética {0, 0,25, 0,50}; trainlist
+  de comprimento fixo 5.392 em todos os braços (real × 4 / × 3 / × 2),
+  com peso igual por imagem real; sintéticas = amostra estratificada das
+  4 células da Fase 3 (674/célula; M25 aninhado); 5 seeds (42, 123, 2024,
+  7, 31415); 30 execuções + 1 de portão. Regra de decisão por IC pareado
+  (df = 4) e TOST ±1,0 pp, que substitui a regra "média > piso" nesta
+  fase. Sem parada opcional.
+- **Lacração**: `lacrado_em_utc` 2026-09-29T00:33:35Z (21:33 local);
+  commit `300438433a9a7a38a87ec21051e043147cb50900`, tag
+  `pre-registro-adendo3`; SHA-256 do adendo `604cf036…d3d90`; prova
+  cruzada de `previsoes_fase0.md` inalterada (`59010c49…`). O hash do
+  arquivo **versionado** (`git show HEAD:…`) foi conferido e é igual ao
+  lacrado. Hash do commit enviado ao supervisor como carimbo externo.
+- **Incidente operacional, sem efeito sobre o conteúdo**: entre o script
+  de lacração e o commit (poucos minutos), comandos colados dentro do
+  paginador `less` do `git diff` criaram um arquivo espúrio na raiz
+  (nome derivado da mensagem de commit, 1.053 bytes, trecho do diff).
+  Ele foi identificado, inspecionado e removido ANTES do commit, que
+  contém só o adendo e `hashes.json` (+287 linhas, 0 remoções). Para
+  evitar repetição: `export GIT_PAGER=cat` antes de sequências de
+  comandos.
+- **Nenhum código de treino, trainlist ou GPU da Fase 5 antes deste
+  commit.**
+
+## 2026-09-28 — Fase 5, portão G1: código e testes de CPU (adendo 3 §8)
+
+- **`close_mosaic` explícito** (`src/train/protocol.py`,
+  `src/train/executar.py`): novo campo com padrão 10, idêntico ao padrão
+  implícito do Ultralytics usado nas Fases 1–3. Configurações antigas
+  continuam idênticas; validado em [0, epochs_total].
+- **`src/train/passos_fixos.py`**: tradução literal do adendo 3 (L =
+  5.392, batch 16, 337 passos/época, S1/S2, close_mosaic = épocas/15,
+  frações, seeds, lista fechada de 30 execuções `f5_{S}_{braço}_seed{n}`,
+  repetição do portão G2 em pasta própria `f5_S1_C_g2rep_seed42`).
+  `n_imagens_epoca` é sempre L, então warmup (500 passos), épocas e
+  close_mosaic são idênticos entre braços de um orçamento.
+- **Trainlist por fração** (`src/train/trainlist.py`):
+  `construir_trainlist_fracao` (listas explícitas; recusa duplicatas e
+  sobreposição real/sintético) e `verificar_trainlist_fracao`, que RELÊ o
+  arquivo escrito e confere comprimento, peso exato de cada real, peso 1
+  de cada sintética e ausência de caminhos estranhos. O verificador não
+  confia na contagem devolvida pelo construtor.
+- **Amostra sintética** (`src/factorial/amostra_fase5.py`,
+  `scripts/amostrar_sinteticas_fase5.py`): exige 2.592 sintéticas por
+  célula após a remoção das cópias sem colagem; `random.Random(f"{semente}:{célula}")`
+  sobre a lista ordenada por nome (determinístico, independente de
+  PYTHONHASHSEED e da ordem do sistema de arquivos); M25 = primeiras 337
+  da ordem de sorteio. O manifesto (`configs/amostra_sinteticas_fase5.csv`)
+  grava só caminhos relativos e o SHA-256 de cada imagem, então o hash do
+  manifesto não depende de onde as células foram extraídas.
+- **`scripts/registrar_artefato.py`**: registra o SHA-256 de um artefato
+  em `hashes.json` › `artefatos`, sem tocar em entradas existentes, e
+  recusa re-registro (uma amostra nova exige adendo novo).
+- **`scripts/preparar_dados_locais_fase5.py`**: lê a amostra do
+  MANIFESTO (confere o SHA-256 de cada imagem; nunca re-sorteia), monta
+  as 3 trainlists e verifica cada uma linha a linha. Ensaio a seco com
+  arquivos fictícios em escala real: C 5.392 real; M25 4.044 + 1.348 (p =
+  0,2500); M50 2.696 + 2.696 (p = 0,5000); 337 passos/época nos três.
+- **Testes**: `test_passos_fixos.py` (todos os números do adendo; kwargs
+  entre braços de um orçamento diferem SÓ em `name`; entre orçamentos, só
+  em épocas, patience, checkpoint, close_mosaic e nome),
+  `test_trainlist_fracao.py`, `test_amostra_fase5.py` (determinismo,
+  aninhamento, sem reposição, manifesto portável, detecção de imagem
+  adulterada), `test_registrar_artefato.py`. Suíte: 257 aprovados, 2
+  módulos pulados por falta de `shap` no ambiente de verificação; rodar a
+  suíte completa no ambiente do projeto.
+- **Pendente para fechar G1** (antes de qualquer GPU): executar
+  `amostrar_sinteticas_fase5.main()` no Colab; registrar o hash do
+  manifesto com `registrar_artefato.py`; commitar o manifesto e
+  `hashes.json`. Depois vêm o script de treino da Fase 5 e o G2
+  (determinismo).

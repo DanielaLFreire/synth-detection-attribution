@@ -75,6 +75,7 @@ def treinar_execucao(
     pesos_base: str = "yolo11n.pt",
     warmup_steps_alvo: int = 500,
     batch_size: int = 16,
+    close_mosaic: int = 10,
 ):
     """Uma execução (braço, seed) com o protocolo V2; copia para o Drive ao final."""
     from ultralytics import YOLO  # import tardio -- GPU
@@ -85,6 +86,7 @@ def treinar_execucao(
     protocolo = ProtocoloTreinoV2(
         pesos_base=pesos_base, epochs_total=epochs_total, epoca_checkpoint=epochs_total,
         warmup_steps_alvo=warmup_steps_alvo, batch_size=batch_size,
+        close_mosaic=close_mosaic,
     )
     kwargs = gerar_kwargs_treino(protocolo, n_imagens_epoca_deste_braco=n_imagens_epoca,
                                  nome_braco=execucao.braco, seed=execucao.seed)

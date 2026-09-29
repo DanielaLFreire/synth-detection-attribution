@@ -61,6 +61,13 @@ class ProtocoloTreinoV2:
     epoca_checkpoint: int | None = None  # OBRIGATÓRIO na prática -- ver __post_init__
     early_stopping_habilitado: bool = False
 
+    # --- Fase 5 (adendo 3, §4.4): close_mosaic EXPLÍCITO ---
+    # Nas Fases 1-3 este argumento não era passado, e o Ultralytics usava
+    # o padrão (10 épocas finais sem mosaic). O padrão aqui é 10 para que
+    # as configurações das fases anteriores permaneçam idênticas; a Fase 5
+    # fixa 1/15 do total de épocas (2 em S1, 5 em S2).
+    close_mosaic: int = 10
+
     def __post_init__(self):
         if self.epoca_checkpoint is None:
             raise ProtocoloInvalido(
@@ -82,6 +89,11 @@ class ProtocoloTreinoV2:
             )
         if self.warmup_steps_alvo <= 0:
             raise ProtocoloInvalido("warmup_steps_alvo deve ser positivo.")
+        if not 0 <= self.close_mosaic <= self.epochs_total:
+            raise ProtocoloInvalido(
+                f"close_mosaic ({self.close_mosaic}) deve estar entre 0 e "
+                f"epochs_total ({self.epochs_total})."
+            )
 
 
 def calcular_warmup_epochs_equivalente(
@@ -146,6 +158,7 @@ def gerar_kwargs_treino(
         "lrf": protocolo.lrf,
         "cos_lr": protocolo.cos_lr,
         "warmup_epochs": warmup_epochs,
+        "close_mosaic": protocolo.close_mosaic,
         "cache": protocolo.cache,
         "seed": seed,
         "name": f"{nome_braco}_seed{seed}",
