@@ -24,6 +24,13 @@
       "caminho": "/content/drive/MyDrive/PROJETO_MARINHA/EXPERIMENTO_ATRIBUICAO_CAUSAL/estagio_a/colagens_sondagem_val/manifesto_colagens_sondagem_val.csv",
       "sha256": "d472a7149676dcb46f8669e51c95660ebccac93e72928bc10f7d84084e51501e",
       "tamanho_bytes": 11093756
+    },
+    "amostra_sinteticas_fase5.csv": {
+      "encontrado": true,
+      "registrado_em_utc": "2026-09-29T01:09:53.460243+00:00",
+      "caminho": "configs/amostra_sinteticas_fase5.csv",
+      "sha256": "f14cddb825d0d6ffda523ecdf5c486a9b5df2d21c753969f7a118e9699b7c588",
+      "tamanho_bytes": 364924
     }
   },
   "adendos": {
