@@ -2551,3 +2551,52 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
   manifesto com `registrar_artefato.py`; commitar o manifesto e
   `hashes.json`. Depois vêm o script de treino da Fase 5 e o G2
   (determinismo).
+
+## 2026-09-28 — Fase 5, G1 fechado; código dos portões G2/G3 e do treino
+
+- **G1 fechado**: amostra sintética gerada no Colab (104 cópias sem
+  colagem removidas por célula = 52 imagens-base sem caixa viável × 2
+  variações; 2.592 por célula, como no adendo 2), manifesto
+  `configs/amostra_sinteticas_fase5.csv` (2.696 linhas, 674/célula, 1.348
+  em M25, 2.696 hashes de imagem distintos), SHA-256 `f14cddb8…b7c588`
+  registrado em `hashes.json` e commitado (`896eb20`) antes de qualquer
+  treino.
+- **`src/train/verificacao_fase5.py`**:
+  - G2: `comparar_results_csv` com igualdade EXATA (sem tolerância) de
+    todas as colunas exceto `time`. É a letra do adendo 3 §8. A
+    comparação dos tensores do `last.pt` é registrada como verificação
+    ADICIONAL e informativa, e não entra no veredito.
+  - G3: `ContadorPassos`, callbacks do Ultralytics que contam os lotes
+    REALMENTE executados e gravam o tamanho do dataset e os passos por
+    época que o treinador montou (`passos_f5.json`). Isso detecta
+    deduplicação das linhas repetidas da trainlist, `close_mosaic` errado
+    e a redução automática de batch por falta de memória (as versões
+    recentes do Ultralytics reduzem o batch pela metade no 1º epoch; isso
+    mudaria os passos e reprovaria o G3).
+  - Pré-requisitos: o manifesto em disco precisa bater com o hash
+    registrado e as 3 trainlists precisam existir com L = 5.392.
+  - Registra GPU, versão do torch e versão do ultralytics em cada
+    execução.
+- **`scripts/treinar_fase5.py`**:
+  - `portao_g2()` treina `f5_S1_C_seed42` e a repetição
+    `f5_S1_C_g2rep_seed42` e grava o veredito UMA vez em
+    `fase5/portao_g2.json`, sem re-execução.
+  - `main()` RECUSA rodar sem veredito GO e recusa ambiente (GPU, torch,
+    ultralytics) diferente do registrado no G2, salvo com
+    `permitir_ambiente_diferente=True`, a registrar aqui.
+  - A pasta local é apagada antes de cada treino, porque o Ultralytics
+    acrescenta linhas a um `results.csv` existente.
+  - Execução incompleta é refeita com a mesma seed. Execução completa com
+    passos errados é violação de protocolo: o script para.
+  - A 1ª execução do G2 é a própria `f5_S1_C_seed42` da lista fechada.
+- **Esclarecimento de terminologia, sem mudança de desenho**: "passos" no
+  adendo 3 são iterações do dataloader (lotes de 16). Com o `nbs = 64`
+  padrão do Ultralytics, o otimizador acumula gradientes de 4 lotes por
+  atualização, IGUALMENTE em todos os braços. A igualdade entre braços,
+  que é o que o desenho exige, vale nas duas contagens.
+- **Testes**: `tests/test_verificacao_fase5.py` cobre a comparação exata,
+  o NaN, o cabeçalho com espaços, a contagem por callback (incluindo
+  dataset deduplicado e passo a menos), o veredito GO/NO-GO, os
+  pré-requisitos com manifesto adulterado ou não registrado, os estados
+  concluída/pendente/violação, a trava do G2 e o bloqueio por ambiente
+  diferente.

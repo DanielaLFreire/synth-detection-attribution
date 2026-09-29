@@ -54,7 +54,8 @@ def execucoes_pendentes(planejadas: list[Execucao], destino_runs_drive: Path, ep
 
 def copiar_resultados_para_drive(pasta_run_local: Path, pasta_run_drive: Path) -> None:
     pasta_run_drive.mkdir(parents=True, exist_ok=True)
-    for nome in ("results.csv", "args.yaml"):
+    # passos_f5.json: contagem real de iterações da Fase 5 (G3); ausente nas fases anteriores
+    for nome in ("results.csv", "args.yaml", "passos_f5.json"):
         origem = Path(pasta_run_local) / nome
         if origem.exists():
             shutil.copy2(origem, pasta_run_drive / nome)
