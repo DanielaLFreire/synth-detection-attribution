@@ -40,6 +40,13 @@
       "sha256": "be395b8bbb017ed0f4aac98009934801f32a23625b4dbb653b94da6e215db7e9",
       "tamanho_bytes": 8008,
       "sha256_previsoes_fase0_md_no_momento": "59010c49994420c52cafcc59af9d8b81d55e4aebe31685e2da7867f96c91afd7"
+    },
+    "adendo3_fase5_passos_igualados.md": {
+      "lacrado_em_utc": "2026-09-29T00:33:35.735864+00:00",
+      "caminho": "docs/pre_registro/adendo3_fase5_passos_igualados.md",
+      "sha256": "604cf0360f2cb1d1f1ae4edd09c207e9e425145e6575f822576a5a2156dd3d90",
+      "tamanho_bytes": 13128,
+      "sha256_previsoes_fase0_md_no_momento": "59010c49994420c52cafcc59af9d8b81d55e4aebe31685e2da7867f96c91afd7"
     }
   }
 }
