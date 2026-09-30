@@ -2658,7 +2658,7 @@ próximo passo é a tarefa 0.2 (perfis das quatro fontes, decisão de
 
 Escrito e testado só com dados fictícios, durante a campanha S2.
 **Registro de cegamento (transparência)**: o código foi gerado e entregue
-como patch (`fase5_analise.patch`, SHA-256 `COLE_AQUI_O_SHA256`)
+como patch (`fase5_analise.patch`, SHA-256 `e245a0fdfb2226aff6d7e6d184711c484ac0a267be8307e7c5397b7b316d35c2`)
 ANTES de qualquer métrica da Fase 5 ser compartilhada. Depois disso, e
 antes deste commit, o log de treino das 6 execuções S2 das seeds 42 e 123
 (que o Ultralytics imprime por época, incluindo recall e mAP) foi exibido
