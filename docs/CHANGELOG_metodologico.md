@@ -2717,3 +2717,25 @@ de `listar()` é compartilhada.
   quadrados, df 1/2/2/4/20, SS de interação nula em dados aditivos); AUC;
   pico com empate; P12 = P11/2; cenários sintéticos "pior", "melhor com
   interação positiva" e "equivalente"; trava de execução única.
+
+## 2026-09-30 — Fase 5, orçamento S2 concluído; campanha 30/30; auditoria de integridade (sem métricas)
+
+- **Campanha S2**: 15/15 execuções (`f5_S2_{C,M25,M50}_seed{42,123,2024,7,31415}`)
+  em três sessões, sem violação de protocolo e sem bloqueio por ambiente.
+  Total da Fase 5: 30/30 execuções da lista fechada, mais a repetição do G2
+  (fora das análises).
+- **Auditoria de integridade do S2**, pelos mesmos critérios da do S1:
+  - trainlist do braço correto;
+  - seed igual no plano, em `args.yaml` e em `passos_f5.json`;
+  - 75 épocas;
+  - 25.275 passos contados por callback;
+  - 5.392 imagens e 337 lotes/época;
+  - `close_mosaic=5`;
+  - GPU, torch e ultralytics iguais ao G2;
+  - `deterministic=True`.
+  Resultado: **15/15 íntegras, 0 problemas**, 15 SHA-256 de `last.pt`
+  distintos. `analisar_fase5.main()` confere de novo a unicidade dos 30 hashes
+  antes de ler qualquer métrica.
+- **Tempo medido**: ~0,61 h por execução em S2; ~0,24 h em S1.
+- **Próximo passo**: execução ÚNICA de `analisar_fase5.main()` (análise
+  fixada em `d1cb1a0`, código idêntico ao patch gerado antes das métricas).
