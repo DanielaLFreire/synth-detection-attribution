@@ -312,7 +312,7 @@ def analisar(recall: Tabela, map50: Tabela, auc: Tabela, small: Tabela,
     }
 
 
-def tabela_markdown(resultado: dict) -> str:
+def tabela_markdown(resultado: dict, familias: tuple[str, ...] = ("F1", "F2", "F3")) -> str:
     def fmt(c):
         ic = c["ic95_pp"]
         extra = " (dentro da margem ±1 pp)" if c["tambem_dentro_da_margem"] else ""
@@ -325,6 +325,63 @@ def tabela_markdown(resultado: dict) -> str:
     cab = ("| Contraste | média (pp) | IC95 | por seed (pp) | p | p Holm | p TOST | veredito |\n"
            "|---|---|---|---|---|---|---|---|")
     partes = []
-    for fam in ("F1", "F2", "F3"):
+    for fam in familias:
         partes.append(f"\n### {fam}\n\n{cab}\n" + "\n".join(fmt(c) for c in resultado[fam]))
     return "\n".join(partes)
+
+
+# ---------------------------------------------------------------------------
+# Teste (adendo 3 §9): réplica confirmatória, avaliação única
+# ---------------------------------------------------------------------------
+
+F2C_NAO_APLICAVEL = ("F2c (área sob a curva recall × passos) não é calculável no teste: exige "
+                     "avaliar os pesos de cada época, e só `last.pt` foi salvo (save_period = −1). "
+                     "Limitação declarada, não omissão.")
+
+
+def analisar_teste(recall: Tabela, map50: Tabela, small: Tabela) -> dict:
+    """Mesmas definições de `analisar`, sobre métricas do TESTE (model.val
+    no last.pt, recall no ponto de máximo-F1, como na Fase 4). F2c é
+    omitida por impossibilidade (F2C_NAO_APLICAVEL); Holm em F2 sobre as
+    3 restantes."""
+    p11 = contraste_f5("P11: M50 − C (S2)", "F1", _dif(recall, "S2", "M50", "C"))
+    p12 = contraste_f5("P12: contraste linear (−1, 0, +1)/2 em S2", "F1",
+                       {s: (recall["S2"]["M50"][s] - recall["S2"]["C"][s]) / 2 for s in SEEDS},
+                       nota="P12 = P11/2 por construção (erro de redação do adendo 3).")
+    p13 = contraste_f5("P13: (M50 − C)_S2 − (M50 − C)_S1", "F1",
+                       {s: (recall["S2"]["M50"][s] - recall["S2"]["C"][s]) - (recall["S1"]["M50"][s] - recall["S1"]["C"][s])
+                        for s in SEEDS}, tipo="interacao")
+    f1 = [p11, p12, p13]
+    holm(f1)
+    f2 = [
+        contraste_f5("F2a: P11 no estrato small", "F2", _dif(small, "S2", "M50", "C")),
+        contraste_f5("F2b: P11 em mAP50", "F2", _dif(map50, "S2", "M50", "C")),
+        contraste_f5("F2d: M50 − C (S1)", "F2", _dif(recall, "S1", "M50", "C")),
+    ]
+    holm(f2)
+    return {
+        "F1": [asdict(c) for c in f1],
+        "F2": [asdict(c) for c in f2],
+        "F2c": F2C_NAO_APLICAVEL,
+        "anova_2x3_bloco_seed": asdict(anova_2x3_bloco(recall)),
+        "medias": {m: {o: {b: float(np.mean([t[o][b][s] for s in SEEDS])) for b in BRACOS} for o in ORCAMENTOS}
+                   for m, t in (("recall", recall), ("map50", map50), ("small", small))},
+    }
+
+
+def comparar_replicacao(val: dict, teste: dict) -> list[dict]:
+    """§9: um contraste 'replica' se o veredito no teste cai na MESMA
+    categoria de §6.1 que na validação. Casamento pelo prefixo do nome
+    (P11, P12, P13, F2a, F2b, F2d)."""
+    def por_chave(res):
+        return {c["nome"].split(":")[0]: c for fam in ("F1", "F2") for c in res[fam]}
+    v, t = por_chave(val), por_chave(teste)
+    saida = []
+    for chave in [k for k in v if k in t]:
+        saida.append({
+            "contraste": chave,
+            "veredito_val": v[chave]["veredito"], "veredito_teste": t[chave]["veredito"],
+            "media_val_pp": v[chave]["media_pp"], "media_teste_pp": t[chave]["media_pp"],
+            "replica": v[chave]["veredito"] == t[chave]["veredito"],
+        })
+    return saida

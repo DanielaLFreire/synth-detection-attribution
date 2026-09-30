@@ -2739,3 +2739,50 @@ de `listar()` é compartilhada.
 - **Tempo medido**: ~0,61 h por execução em S2; ~0,24 h em S1.
 - **Próximo passo**: execução ÚNICA de `analisar_fase5.main()` (análise
   fixada em `d1cb1a0`, código idêntico ao patch gerado antes das métricas).
+
+## 2026-09-30 — Fase 5: análise de validação executada (única); script do teste
+
+- **Análise de validação** (`analisar_fase5.main()`, commit `d1cb1a0`),
+  executada uma única vez, com a trava gravada. Resultados em
+  `docs/fase5_resultados_val.json` (cópia de `fase5/resultados_val_fase5.json`)
+  e `docs/resultados_fase5.md`.
+- **Vereditos pela letra**:
+  - **P11 inconclusivo** (+0,29 pp, IC95 [−1,41; +1,99]; subdimensionado,
+    dp 1,37 pp). Consequência §6.5: P10 permanece com o confundimento
+    declarado como limitação.
+  - P12 "equivalente": não interpretável (= P11/2, erro de redação já
+    registrado).
+  - P13: interação não detectada (+3,56 pp, IC95 [−0,87; +8,00]).
+  - F2c (área sob a curva): sintético pior, −1,57 pp, p Holm = 0,001, 5/5
+    seeds.
+  - F2d: −3,27 pp com p Holm = 0,096. O rótulo "sintetico_pior" do script
+    vem do IC não ajustado; pelo §7 a leitura é "não significativo após
+    Holm". F2a e F2b: equivalência por TOST sem ajuste múltiplo.
+- **Leituras post hoc** (identificadas como tal em `resultados_fase5.md`
+  §4): a desvantagem da Fase 3 (−1,8 pp) fica abaixo do limite inferior do
+  IC95 de P11; o pico dos braços sintéticos não vem antes com passos
+  igualados.
+- **Lições de método**: o recall da última época é um endpoint ruidoso (dp
+  1,37 contra 0,29 pp na área sob a curva); contrastes precisam ser
+  verificados quanto a redundância antes de lacrar; o veredito das
+  secundárias deveria usar IC ajustado.
+- **`scripts/avaliar_teste_fase5.py`** (§9), escrito ANTES de o teste ser
+  tocado:
+  - `verificar()` (sem modelos) exige, para GO:
+    - análise de validação executada;
+    - marcador do teste ausente;
+    - SHA-256 dos 30 `last.pt` igual ao manifesto `modelos_fase5.json`;
+    - teste pareado;
+    - isolamento por nome e por conteúdo (md5) contra train e val;
+    - isolamento contra as imagens-base da amostra sintética.
+  - `main()` avalia os 30 modelos (recall de máximo-F1 e mAP50 via
+    `model.val`, como na Fase 4; estrato small da Fase 3) e calcula F1 e
+    F2. F2c não é calculável no teste: só `last.pt` foi salvo; declarado
+    em `F2C_NAO_APLICAVEL`. Também compara com a validação (réplica =
+    mesma categoria §6.1) e grava o marcador `fase5/teste_avaliado.json`
+    por último.
+- `src/factorial/analise_fase5.py`: `analisar_teste`, `comparar_replicacao`
+  e o parâmetro `familias` em `tabela_markdown`, sem mudança nas funções
+  usadas na validação. Testes: `tests/test_teste_fase5.py` (análise do
+  teste, critério de réplica, GO e os 4 NO-GO de `verificar()`, recusa com
+  marcador).
