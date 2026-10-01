@@ -2786,3 +2786,30 @@ de `listar()` é compartilhada.
   usadas na validação. Testes: `tests/test_teste_fase5.py` (análise do
   teste, critério de réplica, GO e os 4 NO-GO de `verificar()`, recusa com
   marcador).
+
+## 2026-09-30 — Fase 5: teste avaliado UMA vez (§9); réplica; fechamento da fase
+
+- **Avaliação única** em 2026-09-30T18:45:39Z, com o código de `cab9c17`
+  (publicado às 16:52Z, antes). `verificar()`: GO nas 10 checagens.
+  Trava: `docs/fase5_teste_avaliado.json`, que contém os SHA-256 dos 30
+  `last.pt` e o SHA-256 dos resultados `e8ea9c11…efb0d`.
+- **P11 replica**: inconclusivo nos dois splits (val +0,29 pp; teste
+  −0,43 pp, IC95 [−1,88; +1,01]). P12 replica sem valor interpretativo.
+  P13 replica como não detectada (teste +1,24 pp).
+- **Secundárias não replicam a categoria**:
+  - F2b (mAP50) no teste: −0,66 pp, IC95 [−0,96; −0,36], p Holm 0,011,
+    5/5 seeds: sintético pior, dentro da margem de ±1 pp.
+  - F2a (small): inconclusivo, −1,37 pp.
+  - F2d (S1): inconclusivo, −1,67 pp.
+  - F2c: não calculável no teste.
+- **Revisão de uma leitura post hoc**: a observação da validação de que o
+  IC95 de P11 excluía a desvantagem da Fase 3 (−1,8 pp) NÃO se sustenta no
+  teste (limite inferior −1,88). `resultados_fase5.md` §4 foi reescrito, e
+  a conclusão reformulada passa a dizer que o experimento não tem precisão
+  para excluir uma desvantagem desse tamanho.
+- **Conclusão da fase** (`resultados_fase5.md` §4): com passos igualados,
+  não há evidência de benefício do sintético; o recall final fica perto de
+  zero nos dois splits, sem precisão para equivalência; o sintético rende
+  menos ao longo do treino (F2c) e tem mAP50 final ligeiramente menor no
+  teste; nenhum contraste, em nenhum split, favoreceu o sintético. P10
+  permanece com o confundimento declarado como limitação (§6.5).

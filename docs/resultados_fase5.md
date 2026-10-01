@@ -96,10 +96,13 @@ Cada afirmação traz o seu estatuto.
    evidência de que o sintético melhore, nem de que piore. Também não foi
    possível afirmar equivalência (o experimento ficou subdimensionado para
    a margem de ±1 pp).
-2. **[Post hoc]** A desvantagem da Fase 3 (−1,75 a −1,80 pp) fica, por
-   pouco, abaixo do limite inferior do IC95 de P11 (−1,41). Isso é
-   compatível com a hipótese de que ela era efeito do dobro de passos, mas
-   não a prova, e não era critério pré-registrado.
+2. **[Post hoc; enfraquecido pelo teste]** Na validação, a desvantagem da
+   Fase 3 (−1,75 a −1,80 pp) ficava, por pouco, abaixo do limite inferior do
+   IC95 de P11 (−1,41). **No teste, o IC95 de P11 vai até −1,88 e já não a
+   exclui.** Portanto, não se pode afirmar que a desvantagem da Fase 3 foi
+   inteiramente efeito de passos. O que se sustenta nos dois splits é que,
+   com passos igualados, a estimativa pontual fica perto de zero (+0,29 no
+   val, −0,43 no teste).
 3. **[Secundário, robusto]** Ao longo do treino, o braço com 50% de
    sintético rende menos que o real puro (−1,57 pp na área sob a curva,
    5/5 seeds, p de Holm = 0,001). A diferença se fecha no fim do orçamento
@@ -116,11 +119,16 @@ Cada afirmação traz o seu estatuto.
 ### Reformulação da conclusão da Fase 3
 
 > Com passos de otimização igualados, não há evidência de que a composição
-> sintética melhore o recall final no CITRA-3D-Real (M50 − C = +0,3 pp,
-> IC95 −1,4 a +2,0; 5 seeds). A desvantagem de ~1,8 pp observada na Fase 3
-> não se reproduziu, e o experimento não teve precisão para afirmar
-> equivalência. Ao longo do treino, o sintético rendeu consistentemente
-> menos (−1,6 pp na área sob a curva, 5/5 seeds).
+> sintética melhore a detecção no CITRA-3D-Real. A diferença no recall final
+> entre 50% de sintético e real puro ficou perto de zero nos dois splits
+> (validação +0,3 pp, IC95 −1,4 a +2,0; teste −0,4 pp, IC95 −1,9 a +1,0;
+> 5 seeds), sem precisão para afirmar equivalência nem para excluir uma
+> desvantagem do tamanho da observada na Fase 3. Ao longo do treino, o
+> sintético rendeu consistentemente menos (−1,6 pp na área sob a curva,
+> validação, 5/5 seeds). No teste, o mAP50 final também foi menor
+> (−0,7 pp, 5/5 seeds), uma diferença detectável porém menor que a margem
+> de relevância de 1 pp. Nenhum contraste, em nenhum split, favoreceu o
+> sintético.
 
 ## 5. Lições de método
 
@@ -138,7 +146,61 @@ Cada afirmação traz o seu estatuto.
 
 ## 6. Teste (adendo 3 §9)
 
-*A preencher após a avaliação única com `scripts/avaliar_teste_fase5.py`.
-Critério: P11 "replica" se o veredito no teste cair na mesma categoria de
-§6.1 que na validação. F2c não é calculável no teste (só `last.pt` foi
-salvo).*
+Avaliação única em 2026-09-30 18:45 UTC, com o código do commit `cab9c17`
+(publicado às 16:52 UTC, antes da avaliação). As 10 checagens de
+`verificar()` deram GO:
+- SHA-256 dos 30 `last.pt` igual ao manifesto da validação;
+- isolamento por nome e por conteúdo contra train e val;
+- isolamento contra as imagens-base da amostra sintética.
+
+Teste: 401 imagens, 1.247 caixas, 996 small (79,9%). Métricas via
+`model.val` no `last.pt` (recall no ponto de máximo-F1, como na Fase 4).
+Registros: `docs/fase5_resultados_teste.json`, `docs/fase5_teste_metricas.csv`
+e `docs/fase5_teste_avaliado.json` (trava).
+
+### 6.1 Vereditos no teste
+
+| Contraste | Média (pp) | IC95 | Por seed | p Holm | Veredito |
+|---|---|---|---|---|---|
+| P11: M50 − C (S2) | −0,43 | [−1,88; +1,01] | −1,65, +0,27, −1,12, −0,88, +1,23 | 0,906 | **inconclusivo** (subdimensionado) |
+| P12: linear/2 | −0,22 | [−0,94; +0,51] | — | 0,906 | "equivalente" — não interpretável (= P11/2) |
+| P13: interação | +1,24 | [−1,62; +4,10] | −2,37, +3,38, +1,90, +2,84, +0,44 | 0,889 | **interação não detectada** |
+| F2a: small | −1,37 | [−2,88; +0,14] | +0,00, −3,01, −0,40, −2,01, −1,41 | 0,132 | inconclusivo |
+| F2b: mAP50 | −0,66 | [−0,96; −0,36] | −0,61, −0,34, −0,57, −0,97, −0,82 | 0,011 | **sintético pior, dentro da margem de ±1 pp** |
+| F2c: área sob a curva | — | — | — | — | não calculável no teste (só `last.pt` salvo) |
+| F2d: M50 − C (S1) | −1,67 | [−4,44; +1,10] | +0,72, −3,11, −3,02, −3,72, +0,79 | 0,170 | inconclusivo |
+
+ANOVA 2×3 (teste, complementar): orçamento F(1,20) = 6,29, p = 0,021;
+fração F(2,20) = 1,10, p = 0,351; interação F(2,20) = 1,31, p = 0,292;
+seed F(4,20) = 0,77, p = 0,560.
+
+### 6.2 Réplica (§9: mesma categoria de §6.1)
+
+| Contraste | Validação | Teste | Réplica |
+|---|---|---|---|
+| **P11** | inconclusivo (+0,29) | inconclusivo (−0,43) | **replica** |
+| P12 | "equivalente" | "equivalente" | replica (sem valor interpretativo) |
+| P13 | não detectada (+3,56) | não detectada (+1,24) | replica |
+| F2a | equivalente (+0,15) | inconclusivo (−1,37) | não replica |
+| F2b | equivalente (+0,04) | pior, dentro da margem (−0,66) | não replica |
+| F2d | rótulo "pior" pelo IC não ajustado; p Holm 0,096 (−3,27) | inconclusivo (−1,67) | não replica pela letra; em ambos os splits é não significativo após Holm, com sinal negativo |
+
+### 6.3 Leitura
+
+- **A primária replica**: P11 é inconclusivo nos dois splits, com
+  estimativas de sinais opostos e perto de zero. Pelo §6.5, P10 permanece
+  com o confundimento declarado como limitação.
+- **As secundárias se deslocam no teste para o lado desfavorável ao
+  sintético, mas sem força**:
+  - mAP50: pequena desvantagem consistente (5/5 seeds, −0,66 pp),
+    detectável e abaixo da margem de relevância.
+  - Estrato small: inconclusivo com média de −1,37 pp. É o regime
+    operacional, e a equivalência vista na validação não se confirmou.
+  - S1: sinal negativo nos dois splits, sem significância após Holm.
+- **A interação (P13) perde força no teste** (+1,24 contra +3,56); a
+  hipótese "o custo do sintético diminui com mais passos" continua sem
+  confirmação.
+- Diferenças de medição entre os splits: na validação, a primária vem do
+  `results.csv` de treino; no teste, de `model.val` sobre o `last.pt`, o
+  mesmo procedimento da Fase 4. Os dois usam os mesmos pesos (EMA) e a
+  mesma definição de máximo-F1.
